@@ -74,7 +74,7 @@ test('Mobile menu supports Escape, keyboard focus and outside dismissal', async 
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.click();
-  await page.locator('h1').click();
+  await page.locator('.hero-note').click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
 
