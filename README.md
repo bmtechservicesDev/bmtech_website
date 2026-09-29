@@ -15,7 +15,7 @@ Open the local URL printed by Vite. Run `npm run build` to produce `dist/` and `
 
 ## Browser review
 
-GitHub Actions runs Chromium checks for all pages at 320, 390, 768, 1024 and 1440 pixels, checks the mobile menu and email draft flow, and uploads full-page screenshots as the `website-browser-review` artifact. To run locally after building: `npx playwright install chromium`, then `npx playwright test`.
+GitHub Actions runs Chromium checks for all pages at 320, 375, 480, 768, 1024, 1280, 1440 and 1920 pixels, checks keyboard menu dismissal, service preselection, validation, draft freshness, email/WhatsApp encoding, copy fallback and reduced motion, and uploads full-page screenshots as the `website-browser-review` artifact. To run locally after building: `npx playwright install chromium`, then `npx playwright test`.
 
 ## Pages and content
 
@@ -77,3 +77,8 @@ firebase deploy --only hosting --project bmtech-website
 Use the exact Hosting URL returned by the CLI. Future updates use the same command after pulling approved changes. Do not run `firebase init hosting` over this configuration, because it can overwrite the Hosting settings. No Firebase credentials or service account keys belong in the repository. GitHub CI remains build/test only and does not automatically publish.
 
 Publish the contents of `dist/` to any static web host. The build generates `index.html` and `services/index.html`, `solutions/index.html`, `about/index.html`, and `contact/index.html`. Configure HTTPS, caching for versioned assets, and the canonical domain after those details are confirmed. The site assumes deployment at the domain root.
+
+
+## UI/UX review
+
+The audit, priorities, design tokens, before/after rationale and validation limits are documented in [docs/UI-UX-REVIEW.md](docs/UI-UX-REVIEW.md). The styles retain the navy/mint brand palette and existing illustration, with shared semantic color, spacing and radius tokens. Service cards link to Contact with an allowlisted service parameter. The browser validates locally and prepares messages; no delivery backend or visitor data storage was introduced.
