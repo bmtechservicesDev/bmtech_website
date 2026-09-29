@@ -13,6 +13,10 @@ npm run dev
 
 Open the local URL printed by Vite. Run `npm run build` to produce `dist/` and `npm run preview` to inspect the production output.
 
+## Browser review
+
+GitHub Actions runs Chromium checks for all pages at 320, 390, 768, 1024 and 1440 pixels, checks the mobile menu and email draft flow, and uploads full-page screenshots as the `website-browser-review` artifact. To run locally after building: `npx playwright install chromium`, then `npx playwright test`.
+
 ## Pages and content
 
 - `/` — Home
