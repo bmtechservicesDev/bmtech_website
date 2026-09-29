@@ -46,5 +46,9 @@ test('Enquiry validates inputs and prepares an accurately encoded email draft', 
   expect(href.searchParams.get('subject')).toBe('Project enquiry — Cloud & SaaS');
   expect(href.searchParams.get('body')).toContain('Test & User');
   expect(href.searchParams.get('body')).toContain('ordering & billing.');
+  const whatsapp = new URL(await page.getByRole('link', { name: 'Enquire on WhatsApp', exact: false }).getAttribute('href'));
+  expect(whatsapp.origin).toBe('https://wa.me');
+  expect(whatsapp.pathname).toBe('/919642668815');
+  expect(whatsapp.searchParams.get('text')).toBe(href.searchParams.get('body'));
   await expect(page.locator('#form-result')).toContainText('Your enquiry has not been sent yet.');
 });
