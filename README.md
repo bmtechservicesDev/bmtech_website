@@ -15,7 +15,7 @@ Open the local URL printed by Vite. Run `npm run build` to produce `dist/` and `
 
 ## Browser review
 
-GitHub Actions runs Chromium checks for all pages at 320, 390, 768, 1024 and 1440 pixels, checks the mobile menu and email draft flow, and uploads full-page screenshots as the `website-browser-review` artifact. To run locally after building: `npx playwright install chromium`, then `npx playwright test`.
+GitHub Actions runs Chromium checks for all pages at 320, 375, 480, 768, 1024, 1280, 1440 and 1920 pixels, checks keyboard menu dismissal, service preselection, validation, draft freshness, email/WhatsApp encoding, copy fallback and reduced motion, and uploads full-page screenshots as the `website-browser-review` artifact. To run locally after building: `npx playwright install chromium`, then `npx playwright test`.
 
 ## Pages and content
 
@@ -43,4 +43,42 @@ Confirm the company domain, formal logo, social links and privacy policy before 
 
 ## Deployment
 
+### Google Cloud / Firebase Hosting
+
+Target project: `bmtech-website` (project number `74431502417`). This configuration deploys only static Firebase Hosting files; it does not provision a backend or database. Native page directories remain intact, with trailing slashes and no SPA catch-all rewrite. Hashed assets receive immutable caching. The predeploy hook builds fresh output.
+
+From Google Cloud Shell, use Node.js 22.12+ and an account with access to this project. Install the official Firebase CLI:
+
+```bash
+npm install -g firebase-tools
+firebase login --no-localhost
+firebase projects:list
+```
+
+If `bmtech-website` is not yet a Firebase project, add Firebase to the existing Google Cloud project (do not create a second project):
+
+```bash
+firebase projects:addfirebase bmtech-website
+```
+
+If Firebase asks for acceptance of terms or reports missing permissions, complete the required setup with the project owner in the Firebase console. Then, from this repository:
+
+```bash
+npm ci
+firebase hosting:channel:deploy review --expires 7d --project bmtech-website
+```
+
+That command builds the website and returns a temporary, publicly accessible preview URL. Check Home, Services, Solutions, About and Contact, plus the email and WhatsApp draft actions. To publish the production site after review:
+
+```bash
+firebase deploy --only hosting --project bmtech-website
+```
+
+Use the exact Hosting URL returned by the CLI. Future updates use the same command after pulling approved changes. Do not run `firebase init hosting` over this configuration, because it can overwrite the Hosting settings. No Firebase credentials or service account keys belong in the repository. GitHub CI remains build/test only and does not automatically publish.
+
 Publish the contents of `dist/` to any static web host. The build generates `index.html` and `services/index.html`, `solutions/index.html`, `about/index.html`, and `contact/index.html`. Configure HTTPS, caching for versioned assets, and the canonical domain after those details are confirmed. The site assumes deployment at the domain root.
+
+
+## UI/UX review
+
+The audit, priorities, design tokens, before/after rationale and validation limits are documented in [docs/UI-UX-REVIEW.md](docs/UI-UX-REVIEW.md). The styles retain the navy/mint brand palette and existing illustration, with shared semantic color, spacing and radius tokens. Service cards link to Contact with an allowlisted service parameter. The browser validates locally and prepares messages; no delivery backend or visitor data storage was introduced.
