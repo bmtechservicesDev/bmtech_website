@@ -25,9 +25,17 @@ Page copy, service cards, industry cards and the shared navigation/footer are in
 
 ## Enquiry setup
 
-The company profile does not provide a verified email address, phone number or enquiry endpoint. The current contact form validates inputs locally, prepares a formatted brief and lets visitors copy it. It **does not send or store enquiries**. Before public launch, supply a verified company contact channel and connect a secure form endpoint or managed form service, with spam protection, privacy notice, delivery monitoring, and clear success/error handling. Remove the interim explanatory copy after direct delivery works. Do not put API secrets in frontend code.
+The supplied contact screenshots authorize these public company details:
 
-Also confirm the company domain, logo, address, social links and privacy policy before publishing. The included text-based mark and social image are interim brand assets, not an assertion that a formal logo was supplied.
+- Email: `bmtechservices2025@gmail.com`
+- Phone: `096426 68815` (international call link: `+91 96426 68815`)
+- Address: Flat No. 35001, Block 3, Wing A, Janapriya Utopia, Janapriya Utopia Road, Attapur, in front of Apollo Pharmacy, Hyderguda, Rajendranagar, Rangareddy – 500048, Telangana.
+
+Update these in the `contact` object in `src/main.js`. The second personal email in the screenshot is intentionally excluded because the instruction specified the BMTech Gmail address.
+
+The contact form validates inputs locally and prepares a formatted enquiry. **Open email draft** opens the visitor's configured email app with recipient, subject and body filled in; the visitor must send the email. Copying the enquiry is available as a fallback. The website does not claim delivery or store enquiries. If introducing server-side submissions later, configure a secure endpoint, delivery monitoring and appropriate privacy information. Do not put API secrets in frontend code.
+
+Confirm the company domain, formal logo, social links and privacy policy before publishing. The included text-based mark and social image are interim brand assets.
 
 ## Deployment
 
