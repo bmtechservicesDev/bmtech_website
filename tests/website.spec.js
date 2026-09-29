@@ -23,7 +23,7 @@ test('Mobile menu allows navigation', async ({ page }) => {
   await page.goto('/');
   const toggle = page.getByRole('button', { name: 'Open navigation' });
   await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByRole('button', { name: 'Close navigation' })).toHaveAttribute('aria-expanded', 'true');
   await page.locator('nav').getByRole('link', { name: 'Services', exact: true }).click();
   await expect(page).toHaveURL(/\/services\/$/);
   await expect(page.locator('nav a[aria-current="page"]')).toHaveText('Services');
