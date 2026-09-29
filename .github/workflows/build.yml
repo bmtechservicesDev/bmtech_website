@@ -1,0 +1,30 @@
+name: Build website
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: website-browser-review
+          path: test-results/
+          retention-days: 7
+      - name: Verify generated routes
+        run: |
+          for page in index.html services/index.html solutions/index.html about/index.html contact/index.html; do
+            test -s "dist/$page"
+            grep -q '<main id="main">' "dist/$page"
+          done
