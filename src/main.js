@@ -72,28 +72,36 @@ const pages = {
   }
 };
 
-const path = window.location.pathname.replace(/\/index\.html$/, '/');
-const page = pages[path] || pages['/'];
-document.title = page.title;
-document.querySelector('meta[name="description"]').content = page.description;
-document.querySelector('meta[property="og:title"]').content = page.title;
-document.querySelector('meta[property="og:description"]').content = page.description;
-document.querySelector('#app').innerHTML = `${header(path)}<main id="main">${page.html}</main>${footer()}`;
-document.querySelector('#year').textContent = new Date().getFullYear();
+export function renderPage(path) {
+  const page = pages[path] || pages['/'];
+  return { title: page.title, description: page.description, html: `${header(path)}<main id="main">${page.html}</main>${footer()}` };
+}
 
-const toggle = document.querySelector('.menu-toggle');
-toggle.addEventListener('click', () => {
-  const open = toggle.getAttribute('aria-expanded') !== 'true';
-  toggle.setAttribute('aria-expanded', String(open));
-  toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
-  document.querySelector('.site-nav').classList.toggle('is-open', open);
-});
-document.querySelectorAll('.site-nav a').forEach(a => a.addEventListener('click', () => {
-  toggle.setAttribute('aria-expanded', 'false');
-  document.querySelector('.site-nav').classList.remove('is-open');
-}));
+if (typeof document !== 'undefined') {
+  const path = window.location.pathname.replace(/\/index\.html$/, '/');
+  const page = renderPage(path);
+  document.title = page.title;
+  document.querySelector('meta[name="description"]').content = page.description;
+  document.querySelector('meta[property="og:title"]').content = page.title;
+  document.querySelector('meta[property="og:description"]').content = page.description;
+  // Static output is pre-rendered; only replace it for local dev or an unknown path.
+  if (!document.querySelector('.site-header') || !pages[path]) document.querySelector('#app').innerHTML = page.html;
+  document.querySelector('#year').textContent = new Date().getFullYear();
 
-const form = document.querySelector('#enquiry-form');
+  const toggle = document.querySelector('.menu-toggle');
+  toggle.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+    document.querySelector('.site-nav').classList.toggle('is-open', open);
+  });
+  document.querySelectorAll('.site-nav a').forEach(a => a.addEventListener('click', () => {
+    toggle.setAttribute('aria-expanded', 'false');
+    document.querySelector('.site-nav').classList.remove('is-open');
+  }));
+}
+
+const form = typeof document !== 'undefined' ? document.querySelector('#enquiry-form') : null;
 if (form) {
   form.addEventListener('submit', event => {
     event.preventDefault();

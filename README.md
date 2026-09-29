@@ -21,7 +21,7 @@ Open the local URL printed by Vite. Run `npm run build` to produce `dist/` and `
 - `/about/` — Company and process
 - `/contact/` — Enquiry brief
 
-Page copy, service cards, industry cards and the shared navigation/footer are in `src/main.js`. The visual system and responsive breakpoints are in `src/styles.css`. Each route has an HTML entry file so a static host can serve deep links without a rewrite rule. JavaScript updates the page title and description after load.
+Page copy, service cards, industry cards and the shared navigation/footer are in `src/main.js`. The visual system and responsive breakpoints are in `src/styles.css`. Each route has an HTML entry file so a static host can serve deep links without a rewrite rule. The build pre-renders content and route-specific metadata into each HTML file; JavaScript attaches navigation and enquiry interactions.
 
 ## Enquiry setup
 
