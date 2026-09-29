@@ -37,7 +37,7 @@ The supplied contact screenshots authorize these public company details:
 
 Update these in the `contact` object in `src/main.js`. The second personal email in the screenshot is intentionally excluded because the instruction specified the BMTech Gmail address.
 
-The contact form validates inputs locally and prepares a formatted enquiry. **Open email draft** opens the visitor's configured email app with recipient, subject and body filled in; the visitor must send the email. Copying the enquiry is available as a fallback. The website does not claim delivery or store enquiries. If introducing server-side submissions later, configure a secure endpoint, delivery monitoring and appropriate privacy information. Do not put API secrets in frontend code.
+The contact form validates inputs locally and prepares a formatted enquiry. **Open email draft** opens the visitor's configured email app with recipient, subject and body filled in; the visitor must send the email. **Enquire on WhatsApp** opens the same enquiry as a prepared message to +91 96426 68815; the visitor reviews and sends it in WhatsApp. Direct WhatsApp links are also available on Contact and in the footer. Copying the enquiry is available as a fallback. The website does not claim delivery or store enquiries. If introducing server-side submissions later, configure a secure endpoint, delivery monitoring and appropriate privacy information. Do not put API secrets in frontend code.
 
 Confirm the company domain, formal logo, social links and privacy policy before publishing. The included text-based mark and social image are interim brand assets.
 
