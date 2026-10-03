@@ -57,8 +57,7 @@ test('Enquiry validates inputs and prepares an accurately encoded email draft', 
 
 
 test('Service enquiry carries the selected capability into the form', async ({ page }) => {
-  await page.goto('/services/');
-  await page.getByRole('link', { name: 'Discuss Embedded systems & IoT', exact: true }).click();
+  await page.goto('/contact/?service=Embedded%20systems%20%26%20IoT');
   await expect(page.locator('[name="interest"]')).toHaveValue('Embedded systems & IoT');
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Contact');
 });
@@ -74,7 +73,7 @@ test('Mobile menu supports Escape, keyboard focus and outside dismissal', async 
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.click();
-  await page.locator('.board-caption').click();
+  await page.locator('main').click({position:{x:10,y:650}});
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
 
@@ -117,7 +116,8 @@ test('Copy fallback and reduced motion remain usable', async ({ page }) => {
 test('Product demo selects product and enquiry type with approved branding', async ({ page }) => {
   await page.goto('/products/');
   await expect(page.locator('.brand img').first()).toHaveAttribute('src', '/brand/bmtech-logo.webp');
-  await page.getByRole('link', { name: 'Request a demo discussion for My School', exact: true }).click();
+  await page.getByRole('link', { name: 'Book a demo', exact: true }).click();
+  await page.locator('[name="interest"]').selectOption('My School');
   await expect(page.locator('[name="interest"]')).toHaveValue('My School');
   await expect(page.locator('[name="type"]')).toHaveValue('Product demo');
   await page.locator('[name="name"]').fill('Demo Review');
@@ -143,4 +143,43 @@ test('All local links, supplied brand assets and server rendered routes resolve'
     const html = await (await request.get(route)).text();
     expect(html).toContain('<main id="main">');
   }
+});
+
+
+test('Single header demo and screenshot removals', async ({ page }) => {
+  for (const route of ['/', '/products/', '/solutions/', '/industries/', '/services/', '/resources/', '/about/', '/contact/']) {
+    await page.goto(route);
+    await expect(page.getByRole('link', { name: 'Book a demo', exact: true })).toHaveCount(1);
+    await expect(page.locator('main')).not.toContainText('Discuss your project');
+    await expect(page.locator('.engineering-board, .hero-bottom, .home-enquiry, .cta-band')).toHaveCount(0);
+  }
+});
+
+test('Every desktop heading opens hover dropdown and supports keyboard dismissal', async ({ page }) => {
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('/');
+  for (const name of ['Products','Industries','Solutions','Resources','About','Contact']) {
+    const button = page.getByRole('button', {name: `${name} submenu`, exact:true});
+    await button.hover();
+    await expect(button).toHaveAttribute('aria-expanded', 'true');
+    const panel = page.locator(`#${await button.getAttribute('aria-controls')}`);
+    await expect(panel).toBeVisible();
+    await button.press('ArrowDown');
+    await expect(panel.locator('a').first()).toBeFocused();
+    await panel.locator('a').first().press('Escape');
+    await expect(panel).toBeHidden();
+    await expect(button).toBeFocused();
+  }
+});
+
+test('Mobile dropdowns expand by tap and anchored product link resolves', async ({ page }) => {
+  await page.setViewportSize({width:375,height:844});
+  await page.goto('/');
+  await page.getByRole('button', {name:'Open navigation'}).click();
+  const button = page.getByRole('button', {name:'Products submenu', exact:true});
+  await button.click();
+  await expect(button).toHaveAttribute('aria-expanded','true');
+  await page.locator('#submenu-0').getByRole('link',{name:'My School',exact:true}).click();
+  await expect(page).toHaveURL(/products\/#product-2$/);
+  await expect(page.locator('#product-2')).toBeVisible();
 });
