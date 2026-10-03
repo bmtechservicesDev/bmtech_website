@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { renderPage } from '../src/main.js';
 
-const routes = ['/', '/services/', '/solutions/', '/about/', '/contact/'];
+const routes = ['/', '/services/', '/solutions/', '/about/', '/contact/', '/products/', '/industries/', '/resources/'];
 const escapeAttribute = value => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
 
 for (const route of routes) {
