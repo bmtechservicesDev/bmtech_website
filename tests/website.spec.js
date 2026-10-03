@@ -191,7 +191,8 @@ test('Mega menu cards fit desktop and mobile viewports', async ({ page }, testIn
     await page.goto('/');
     if (width < 861) await page.getByRole('button',{name:'Open navigation'}).click();
     const button = page.getByRole('button',{name:'Solutions submenu',exact:true});
-    await button.click();
+    if (width < 861) await button.click();
+    else await button.hover();
     await expect(page.locator('#submenu-2 .mega-card')).toHaveCount(5);
     await expect(page.locator('#submenu-2 .mega-icon svg').first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
