@@ -5,7 +5,7 @@ for (const width of [320, 375, 480, 768, 1024, 1280, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    for (const route of ['/', '/services/', '/solutions/', '/about/', '/contact/']) {
+    for (const route of ['/', '/services/', '/solutions/', '/about/', '/contact/', '/products/', '/industries/', '/resources/']) {
       const response = await page.goto(route);
       expect(response.status()).toBe(200);
       await expect(page.locator('h1')).toBeVisible();
@@ -24,9 +24,9 @@ test('Mobile menu allows navigation', async ({ page }) => {
   const toggle = page.getByRole('button', { name: 'Open navigation' });
   await toggle.click();
   await expect(page.getByRole('button', { name: 'Close navigation' })).toHaveAttribute('aria-expanded', 'true');
-  await page.locator('nav').getByRole('link', { name: 'Services', exact: true }).click();
-  await expect(page).toHaveURL(/\/services\/$/);
-  await expect(page.locator('nav a[aria-current="page"]')).toHaveText('Services');
+  await page.locator('nav').getByRole('link', { name: 'Products', exact: true }).click();
+  await expect(page).toHaveURL(/\/products\/$/);
+  await expect(page.locator('nav a[aria-current="page"]')).toHaveText('Products');
 });
 
 test('Enquiry validates inputs and prepares an accurately encoded email draft', async ({ page }) => {
@@ -74,7 +74,7 @@ test('Mobile menu supports Escape, keyboard focus and outside dismissal', async 
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.click();
-  await page.locator('.hero-note').click();
+  await page.locator('.board-caption').click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
 
@@ -112,4 +112,35 @@ test('Copy fallback and reduced motion remain usable', async ({ page }) => {
   await expect(page.locator('#copy-status')).toHaveText('Select and copy the highlighted text.');
   await expect(page.locator('#brief-output')).toBeFocused();
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
+});
+
+test('Product demo selects product and enquiry type with approved branding', async ({ page }) => {
+  await page.goto('/products/');
+  await expect(page.locator('.brand img').first()).toHaveAttribute('src', '/brand/bmtech-logo.webp');
+  await page.getByRole('link', { name: 'Request a demo discussion for My School', exact: true }).click();
+  await expect(page.locator('[name="interest"]')).toHaveValue('My School');
+  await expect(page.locator('[name="type"]')).toHaveValue('Product demo');
+  await page.locator('[name="name"]').fill('Demo Review');
+  await page.locator('[name="email"]').fill('demo@example.com');
+  await page.locator('[name="phone"]').fill('+91 90000 00000');
+  await page.locator('[name="message"]').fill('We would like to discuss a demonstration for our school.');
+  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
+  await expect(page.locator('#brief-output')).toHaveValue(/Enquiry type: Product demo/);
+  await expect(page.locator('#brief-output')).toHaveValue(/Phone: \+91 90000 00000/);
+});
+
+test('All local links, supplied brand assets and server rendered routes resolve', async ({ page, request }) => {
+  const visited = new Set();
+  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/']) {
+    await page.goto(route);
+    await expect(page.locator('h1')).toHaveCount(1);
+    for (const href of await page.locator('a[href^="/"], img[src^="/"], link[rel="icon"]').evaluateAll(nodes => nodes.map(n=>n.getAttribute('href') || n.getAttribute('src')))) {
+      if (visited.has(href)) continue;
+      visited.add(href);
+      const response = await request.get(href);
+      expect(response.status(), href).toBe(200);
+    }
+    const html = await (await request.get(route)).text();
+    expect(html).toContain('<main id="main">');
+  }
 });

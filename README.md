@@ -21,7 +21,10 @@ GitHub Actions runs Chromium checks for all pages at 320, 375, 480, 768, 1024, 1
 
 - `/` — Home
 - `/services/` — Capabilities
-- `/solutions/` — Industry solution areas
+- `/solutions/` — Custom development and transformation
+- `/products/` — Restaurant Solution, Clinic Automation, My School and IoT Gateway
+- `/industries/` — Industry context and possibilities
+- `/resources/` — Project planning prompts and FAQs
 - `/about/` — Company and process
 - `/contact/` — Enquiry brief
 
@@ -39,7 +42,7 @@ Update these in the `contact` object in `src/main.js`. The second personal email
 
 The contact form validates inputs locally and prepares a formatted enquiry. **Open email draft** opens the visitor's configured email app with recipient, subject and body filled in; the visitor must send the email. **Enquire on WhatsApp** opens the same enquiry as a prepared message to +91 96426 68815; the visitor reviews and sends it in WhatsApp. Direct WhatsApp links are also available on Contact and in the footer. Copying the enquiry is available as a fallback. The website does not claim delivery or store enquiries. If introducing server-side submissions later, configure a secure endpoint, delivery monitoring and appropriate privacy information. Do not put API secrets in frontend code.
 
-Confirm the company domain, formal logo, social links and privacy policy before publishing. The included text-based mark and social image are interim brand assets.
+The approved logo and favicon are supplied by the owner. Optimized derivatives are in `public/brand/`. The full supplied square artwork is used for favicon sizes, preserving the design; fine wording is naturally unreadable at small tab-icon sizes. Confirm the company domain, product scope/availability, social links and privacy policy before adding public claims.
 
 ## Deployment
 
@@ -68,7 +71,7 @@ npm ci
 firebase hosting:channel:deploy review --expires 7d --project bmtech-website
 ```
 
-That command builds the website and returns a temporary, publicly accessible preview URL. Check Home, Services, Solutions, About and Contact, plus the email and WhatsApp draft actions. To publish the production site after review:
+That command builds the website and returns a temporary, publicly accessible preview URL. Check all eight pages, plus the email and WhatsApp draft actions. To publish the production site after review:
 
 ```bash
 firebase deploy --only hosting --project bmtech-website
@@ -81,4 +84,16 @@ Publish the contents of `dist/` to any static web host. The build generates `ind
 
 ## UI/UX review
 
-The audit, priorities, design tokens, before/after rationale and validation limits are documented in [docs/UI-UX-REVIEW.md](docs/UI-UX-REVIEW.md). The styles retain the navy/mint brand palette and existing illustration, with shared semantic color, spacing and radius tokens. Service cards link to Contact with an allowlisted service parameter. The browser validates locally and prepares messages; no delivery backend or visitor data storage was introduced.
+The audit, priorities, design tokens, before/after rationale and validation limits are documented in [docs/UI-UX-REVIEW.md](docs/UI-UX-REVIEW.md). The October enhancement uses the approved navy/cyan/blue/orange logo palette and a CSS engineering roadmap illustration, with shared semantic color, spacing and radius tokens. Service cards link to Contact with an allowlisted service parameter. The browser validates locally and prepares messages; no delivery backend or visitor data storage was introduced.
+
+## October brand and UX enhancement
+
+Source: owner’s `change_request1.jpeg`, `BMTech-Logo.jpeg`, `BMTech-Favicon.jpeg`, and retrieved decisions from “Website UX Brief”. The site separates products, industries, solutions and planning resources. Product descriptions invite a scope/demo discussion and make no availability, pricing or unverified feature claims.
+
+Edit `products`, `solutionGroups`, `industries`, and page templates in `src/main.js`. Demo links allowlist `type` and `service` query values; form fields include optional phone and enquiry type. All source fields hide stale drafts when edited.
+
+AI is presented as an engineering capability with practical workflow discussion prompts. There is no live AI model, chatbot or automated recommendation service. Activating one requires a secure server endpoint, provider configuration, evaluation, privacy information and abuse/rate controls; credentials must stay server-side.
+
+Fonts use a system stack with no external font request. No new runtime dependency was added. Brand image dimensions are explicit and the logo is compressed WebP. All eight routes are prerendered for static delivery and search visibility.
+
+To review this feature before merging, pull `feat/brand-product-experience` and run `npm ci` then `firebase hosting:channel:deploy review --expires 7d --project bmtech-website`. Production deployment remains a separate owner action.
