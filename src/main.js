@@ -41,16 +41,25 @@ const sectionHead = (kicker, heading, text) => `<div class="section-head">${eyeb
 function brand() {
   return `<a class="brand" href="/" aria-label="BM Tech Services home"><img src="/brand/bmtech-logo.webp" width="1600" height="639" alt="BMTech — Engineering Intelligence | Transforming Business"></a>`;
 }
+function menuIcon(index) {
+  const paths = [
+    '<rect x="4" y="5" width="24" height="20" rx="3"/><path d="M4 11h24M11 29h10M16 25v4"/>',
+    '<path d="M16 3l11 6v14l-11 6-11-6V9zM5 9l11 6 11-6M16 15v14"/>',
+    '<circle cx="16" cy="16" r="6"/><path d="M16 3v7M16 22v7M3 16h7M22 16h7M7 7l5 5M20 20l5 5M7 25l5-5M20 12l5-5"/>',
+    '<path d="M5 6h9a4 4 0 014 4v18a5 5 0 00-5-4H5zM18 10a4 4 0 014-4h5v18h-5a4 4 0 00-4 4"/>'
+  ];
+  return `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${paths[index % paths.length]}</svg>`;
+}
 function header(page) {
   const nav = [
-    ['/products/', 'Products', products.map(([title], i) => [`/products/#product-${i}`, title])],
-    ['/industries/', 'Industries', industries.map(([title], i) => [`/industries/#industry-${i}`, title])],
-    ['/solutions/', 'Solutions', [...solutionGroups.map(([title], i) => [`/solutions/#solution-${i}`, title]), ['/services/', 'All engineering capabilities']]],
-    ['/resources/', 'Resources', [['/resources/#resource-0', 'Product planning'], ['/resources/#resource-1', 'Development brief'], ['/resources/#resource-2', 'AI & transformation'], ['/resources/#questions', 'Common questions']]],
-    ['/about/', 'About', [['/about/', 'Our company'], ['/about/#approach', 'Our approach'], ['/about/#why-us', 'Why BMTech']]],
-    ['/contact/', 'Contact', [['/contact/#enquiry-form', 'Enquiry form'], [`mailto:${contact.email}`, 'Email us'], [`tel:${contact.phone}`, 'Call us'], [whatsappUrl, 'WhatsApp']]]
+    ['/products/', 'Products', products.map(([title, category], i) => [`/products/#product-${i}`, title, category])],
+    ['/industries/', 'Industries', industries.map(([title, copy], i) => [`/industries/#industry-${i}`, title, copy])],
+    ['/solutions/', 'Solutions', [...solutionGroups.map(([title, , copy], i) => [`/solutions/#solution-${i}`, title, copy]), ['/services/', 'All engineering capabilities', 'Software, embedded systems, AI and cloud expertise.']]],
+    ['/resources/', 'Resources', [['/resources/#resource-0', 'Product planning', 'Define your users, product scope and priorities.'], ['/resources/#resource-1', 'Development brief', 'Prepare requirements for your next software project.'], ['/resources/#resource-2', 'AI & transformation', 'Find practical opportunities to improve workflows.'], ['/resources/#questions', 'Common questions', 'Understand how we work and prepare an enquiry.']]],
+    ['/about/', 'About', [['/about/', 'Our company', 'Engineering intelligence and transforming business.'], ['/about/#approach', 'Our approach', 'Discover, design, build and improve.'], ['/about/#why-us', 'Why BMTech', 'Connected thinking across hardware, software and cloud.']]],
+    ['/contact/', 'Contact', [['/contact/#enquiry-form', 'Enquiry form', 'Prepare a brief for your requirement.'], [`mailto:${contact.email}`, 'Email us', 'bmtechservices2025@gmail.com'], [`tel:${contact.phone}`, 'Call us', '096426 68815'], [whatsappUrl, 'WhatsApp', 'Connect with our team on WhatsApp.']]]
   ];
-  return `<header class="site-header"><div class="container header-inner">${brand()}<button class="menu-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation"><span></span><span></span><span></span></button><nav id="site-nav" class="site-nav" aria-label="Main navigation">${nav.map(([path, label, children], i) => `<div class="nav-item"><div class="nav-heading"><a href="${path}" ${page === path ? 'aria-current="page"' : ''}>${label}</a><button class="dropdown-toggle" aria-label="${label} submenu" aria-expanded="false" aria-controls="submenu-${i}"><span aria-hidden="true">⌄</span></button></div><div class="nav-dropdown" id="submenu-${i}" hidden><a class="dropdown-overview" href="${path}">Explore ${label.toLowerCase()} <span aria-hidden="true">↗</span></a>${children.map(([href, text]) => `<a href="${href}">${text}</a>`).join('')}</div></div>`).join('')}${link('/contact/?type=Product%20demo', 'Book a demo', 'button button-small nav-cta')}</nav></div></header>`;
+  return `<header class="site-header"><div class="container header-inner">${brand()}<button class="menu-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation"><span></span><span></span><span></span></button><nav id="site-nav" class="site-nav" aria-label="Main navigation">${nav.map(([path, label, children], i) => `<div class="nav-item"><div class="nav-heading"><a href="${path}" ${page === path ? 'aria-current="page"' : ''}>${label}</a><button class="dropdown-toggle" aria-label="${label} submenu" aria-expanded="false" aria-controls="submenu-${i}"><span aria-hidden="true">⌄</span></button></div><div class="nav-dropdown" id="submenu-${i}" hidden><a class="dropdown-overview" href="${path}">Explore ${label.toLowerCase()} <span aria-hidden="true">↗</span></a>${children.map(([href, text, description], j) => `<a class="mega-card" href="${href}"><span class="mega-icon" aria-hidden="true">${menuIcon(j)}</span><span class="mega-copy"><strong>${text}</strong><span>${description || 'Explore this area with BMTech.'}</span></span></a>`).join('')}</div></div>`).join('')}${link('/contact/?type=Product%20demo', 'Book a demo', 'button button-small nav-cta')}</nav></div></header>`;
 }
 function footer() {
   return `<footer class="site-footer"><div class="container"><div class="footer-top"><div>${brand()}<p>Engineering Intelligence | Transforming Business</p><p>AI • Cloud • IoT • Automation • Digital Transformation</p></div><div><h3>Explore</h3><a href="/products/">Products</a><a href="/industries/">Industries</a><a href="/solutions/">Solutions</a><a href="/services/">All capabilities</a><a href="/resources/">Resources</a><a href="/about/">About us</a></div><div><h3>Get in touch</h3><a href="/contact/">Contact us ↗</a><a href="mailto:${contact.email}">${contact.email}</a><a href="tel:${contact.phone}">${contact.phoneDisplay}</a><a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">WhatsApp enquiry ↗</a><address>${contact.address}</address></div></div><div class="footer-bottom"><span>© <span id="year"></span> BM Tech Services</span><span>Innovate. Automate. Digitalize. Grow.</span></div></div></footer>`;
