@@ -183,3 +183,18 @@ test('Mobile dropdowns expand by tap and anchored product link resolves', async 
   await expect(page).toHaveURL(/products\/#product-2$/);
   await expect(page.locator('#product-2')).toBeVisible();
 });
+
+
+test('Mega menu cards fit desktop and mobile viewports', async ({ page }, testInfo) => {
+  for (const width of [375, 1024, 1440]) {
+    await page.setViewportSize({width,height:900});
+    await page.goto('/');
+    if (width < 861) await page.getByRole('button',{name:'Open navigation'}).click();
+    const button = page.getByRole('button',{name:'Solutions submenu',exact:true});
+    await button.click();
+    await expect(page.locator('#submenu-2 .mega-card')).toHaveCount(5);
+    await expect(page.locator('#submenu-2 .mega-icon svg').first()).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    await page.screenshot({path:testInfo.outputPath(`mega-menu-${width}.png`),fullPage:false});
+  }
+});
