@@ -79,7 +79,7 @@ firebase deploy --only hosting --project bmtech-website
 
 Use the exact Hosting URL returned by the CLI. Future updates use the same command after pulling approved changes. Do not run `firebase init hosting` over this configuration, because it can overwrite the Hosting settings. No Firebase credentials or service account keys belong in the repository. GitHub CI remains build/test only and does not automatically publish.
 
-Publish the contents of `dist/` to any static web host. The build generates `index.html` and `services/index.html`, `solutions/index.html`, `about/index.html`, and `contact/index.html`. Configure HTTPS, caching for versioned assets, and the canonical domain after those details are confirmed. The site assumes deployment at the domain root.
+Publish the contents of `dist/` to any static web host. The build generates `index.html` and `services/index.html`, `solutions/index.html`, `about/index.html`, `contact/index.html`, `products/index.html`, `industries/index.html` and `resources/index.html`. Configure HTTPS, caching for versioned assets, and the canonical domain after those details are confirmed. The site assumes deployment at the domain root.
 
 
 ## UI/UX review

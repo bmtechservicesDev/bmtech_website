@@ -378,3 +378,5 @@ em { font-style: normal; color: var(--primary); }
 
 @media(max-width:860px){.site-nav{top:88px;max-height:calc(100dvh - 88px);}.site-nav>a[aria-current]{background:#113757;}.menu-toggle{background:#03182e;}}
 @media(max-width:540px){.site-nav{top:82px;max-height:calc(100dvh - 82px);}}
+@media(max-width:860px){.hero-inner{display:grid;gap:2rem;}}
+@media(max-width:860px){.contact-form{grid-row:1;}.contact-aside{grid-row:2;}}

@@ -15,3 +15,7 @@ Eight static routes retain the framework and existing service capability page. R
 ## Remaining configuration
 
 Product specifications, commercial availability, pricing, approved domain, privacy policy and any social links require owner-approved details. A live AI service and server-side lead delivery are not configured. No merge or production deployment is performed by this change.
+
+## Verification
+
+Initial implementation passed all 16 CI tests. Screenshot review covered all eight desktop pages plus phone/tablet layouts. Review identified hero-to-illustration spacing on small screens; grid spacing was corrected. Mobile Contact puts the form before the lengthy contact details. Final CI reruns validate these refinements. There is no lint/type-check script in the JavaScript repository; syntax, build and meaningful browser tests are the available checks.
