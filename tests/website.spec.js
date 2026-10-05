@@ -196,7 +196,13 @@ test('Mega menu cards fit desktop and mobile viewports', async ({ page }, testIn
     await expect(page.locator('#submenu-2 .mega-card')).toHaveCount(5);
     await expect(page.locator('#submenu-2 .mega-icon svg').first()).toBeVisible();
     // On touch layouts, expanded cards scroll inside the navigation panel.
-    if (width > 1100) await expect(page.getByRole('link', { name: 'Book a demo', exact: true })).toBeInViewport();
+    if (width > 1100) {
+      const demo = page.getByRole('link', { name: 'Book a demo', exact: true });
+      await expect(demo).toBeInViewport();
+      const bounds = await demo.boundingBox();
+      expect(bounds.height).toBeLessThanOrEqual(52);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width + 1);
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     await page.screenshot({path:testInfo.outputPath(`mega-menu-${width}.png`),fullPage:false});
   }
