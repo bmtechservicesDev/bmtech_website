@@ -186,16 +186,94 @@ test('Mobile dropdowns expand by tap and anchored product link resolves', async 
 
 
 test('Mega menu cards fit desktop and mobile viewports', async ({ page }, testInfo) => {
-  for (const width of [375, 1024, 1440]) {
+  for (const width of [375, 1024, 1101, 1440]) {
     await page.setViewportSize({width,height:900});
     await page.goto('/');
-    if (width < 861) await page.getByRole('button',{name:'Open navigation'}).click();
+    if (width < 1101) await page.getByRole('button',{name:'Open navigation'}).click();
     const button = page.getByRole('button',{name:'Solutions submenu',exact:true});
-    if (width < 861) await button.click();
+    if (width < 1101) await button.click();
     else await button.hover();
     await expect(page.locator('#submenu-2 .mega-card')).toHaveCount(5);
     await expect(page.locator('#submenu-2 .mega-icon svg').first()).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Book a demo', exact: true })).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     await page.screenshot({path:testInfo.outputPath(`mega-menu-${width}.png`),fullPage:false});
   }
+});
+
+test('Portfolio enquiries retain the chosen offering and the appropriate request type', async ({ page }) => {
+  const offerings = [
+    ['Restaurant Solution', 'Product demo'], ['Clinic Automation', 'Product demo'],
+    ['My School', 'Product demo'], ['IoT Gateway', 'Product demo'],
+    ['Smart LED', 'Product demo'], ['Queue Management', 'Product demo'],
+    ['Website Development & Hosting', 'Website & marketing'],
+    ['Domain Training & Education', 'Training & education']
+  ];
+  for (const [offering, type] of offerings) {
+    await page.goto('/products/');
+    await page.getByRole('link', { name: `Request details for ${offering}`, exact: true }).click();
+    await expect(page.locator('[name="interest"]')).toHaveValue(offering);
+    await expect(page.locator('[name="type"]')).toHaveValue(type);
+    await expect(page.locator('#enquiry-form')).toBeInViewport();
+  }
+});
+
+test('CRM and marketing services open a contextual enquiry', async ({ page }) => {
+  for (const [title, interest, type] of [
+    ['CRM & business automation', 'CRM & business automation', 'Custom development'],
+    ['Digital marketing', 'Digital Marketing & Solutions', 'Website & marketing']
+  ]) {
+    await page.goto('/services/');
+    await page.getByRole('link', { name: `Enquire about this service ${title}`, exact: true }).click();
+    await expect(page.locator('[name="interest"]')).toHaveValue(interest);
+    await expect(page.locator('[name="type"]')).toHaveValue(type);
+  }
+});
+
+test('Company profile is a real downloadable PDF reachable through resources', async ({ page, request }) => {
+  await page.goto('/resources/');
+  const download = page.getByRole('link', { name: 'Download company profile', exact: false });
+  await expect(download).toBeVisible();
+  const response = await request.get(await download.getAttribute('href'));
+  expect(response.status()).toBe(200);
+  expect(response.headers()['content-type']).toContain('application/pdf');
+  expect((await response.body()).subarray(0, 5).toString()).toBe('%PDF-');
+});
+
+test('First pointer click keeps a hover-open desktop submenu usable', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  const button = page.getByRole('button', { name: 'Products submenu', exact: true });
+  await button.click();
+  await expect(button).toHaveAttribute('aria-expanded', 'true');
+  await button.click();
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+  await button.press('Enter');
+  await expect(button).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('Tablet navigation supports tap and a compact contact form stays near the top', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto('/');
+  const toggle = page.getByRole('button', { name: 'Open navigation' });
+  await toggle.click();
+  const products = page.getByRole('button', { name: 'Products submenu', exact: true });
+  await products.click();
+  await expect(page.locator('#submenu-0')).toBeVisible();
+  await products.press('Escape');
+  await expect(products).toBeFocused();
+  await expect(page.locator('#submenu-0')).toBeHidden();
+  await page.goto('/contact/');
+  await expect(page.locator('[name="name"]')).toBeInViewport();
+});
+
+test('Unknown enquiry parameters keep safe defaults and selection clears its error', async ({ page }) => {
+  await page.goto('/contact/?service=Unknown&type=Unknown');
+  await expect(page.locator('[name="type"]')).toHaveValue('General enquiry');
+  await expect(page.locator('[name="interest"]')).toHaveValue('');
+  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
+  await expect(page.locator('#interest-error')).toBeVisible();
+  await page.locator('[name="interest"]').selectOption('Queue Management');
+  await expect(page.locator('#interest-error')).toBeHidden();
+  await expect(page.locator('[name="interest"]')).toHaveAttribute('aria-invalid', 'false');
 });

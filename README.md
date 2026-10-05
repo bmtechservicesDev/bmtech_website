@@ -22,9 +22,9 @@ GitHub Actions runs Chromium checks for all pages at 320, 375, 480, 768, 1024, 1
 - `/` — Home
 - `/services/` — Capabilities
 - `/solutions/` — Custom development and transformation
-- `/products/` — Restaurant Solution, Clinic Automation, My School and IoT Gateway
+- `/products/` — Restaurant Solution, Clinic Automation, My School, IoT Gateway, Smart LED, Queue Management, Website Development & Hosting, and Domain Training & Education
 - `/industries/` — Industry context and possibilities
-- `/resources/` — Project planning prompts and FAQs
+- `/resources/` — Downloadable company profile, project planning prompts and FAQs
 - `/about/` — Company and process
 - `/contact/` — Enquiry brief
 
@@ -35,7 +35,7 @@ Page copy, service cards, industry cards and the shared navigation/footer are in
 The supplied contact screenshots authorize these public company details:
 
 - Email: `bmtechservices2025@gmail.com`
-- Phone: `096426 68815` (international call link: `+91 96426 68815`)
+- Phone: `+91 96426 68815`
 - Address: Flat No. 35001, Block 3, Wing A, Janapriya Utopia, Janapriya Utopia Road, Attapur, in front of Apollo Pharmacy, Hyderguda, Rajendranagar, Rangareddy – 500048, Telangana.
 
 Update these in the `contact` object in `src/main.js`. The second personal email in the screenshot is intentionally excluded because the instruction specified the BMTech Gmail address.
@@ -84,11 +84,11 @@ Publish the contents of `dist/` to any static web host. The build generates `ind
 
 ## UI/UX review
 
-The audit, priorities, design tokens, before/after rationale and validation limits are documented in [docs/UI-UX-REVIEW.md](docs/UI-UX-REVIEW.md). The October enhancement uses the approved navy/cyan/blue/orange logo palette and a CSS engineering roadmap illustration, with shared semantic color, spacing and radius tokens. Service cards link to Contact with an allowlisted service parameter. The browser validates locally and prepares messages; no delivery backend or visitor data storage was introduced.
+The audit, priorities, design tokens, before/after rationale and validation limits are documented in [docs/UI-UX-REVIEW.md](docs/UI-UX-REVIEW.md). The current site uses the approved navy/cyan/blue/orange logo palette, a content-first hero and light mega menus, with shared semantic color, spacing and radius tokens. Service cards link to Contact with an allowlisted service parameter. The browser validates locally and prepares messages; no delivery backend or visitor data storage was introduced.
 
 ## October brand and UX enhancement
 
-Source: owner’s `change_request1.jpeg`, `BMTech-Logo.jpeg`, `BMTech-Favicon.jpeg`, and retrieved decisions from “Website UX Brief”. The site separates products, industries, solutions and planning resources. Product descriptions invite a scope/demo discussion and make no availability, pricing or unverified feature claims.
+Source: owner’s `change_request1.jpeg`, `BMTech-Logo.jpeg`, `BMTech-Favicon.jpeg`, and retrieved decisions from “Website UX Brief”. The site separates products, industries, solutions and planning resources. Product descriptions identify workflow areas for a scope discussion. Specifications, integrations and commercial availability are agreed during discovery; no pricing or customer proof is invented.
 
 Edit `products`, `solutionGroups`, `industries`, and page templates in `src/main.js`. Demo links allowlist `type` and `service` query values; form fields include optional phone and enquiry type. All source fields hide stale drafts when edited.
 
@@ -96,4 +96,20 @@ AI is presented as an engineering capability with practical workflow discussion 
 
 Fonts use a system stack with no external font request. No new runtime dependency was added. Brand image dimensions are explicit and the logo is compressed WebP. All eight routes are prerendered for static delivery and search visibility.
 
-To review this feature before merging, pull `feat/brand-product-experience` and run `npm ci` then `firebase hosting:channel:deploy review --expires 7d --project bmtech-website`. Production deployment remains a separate owner action.
+## Market-readiness refinement
+
+The [latest review](docs/MARKET-READINESS-REVIEW.md) compares the supplied Firebase preview with the current feature branch. Cards now explain workflow areas and link to contextual enquiries. CRM, business automation and digital marketing are explicit capabilities. The existing My School and IoT Gateway offerings remain alongside the six company-profile portfolio areas. The client-ready profile is available at `public/documents/bm-tech-services-company-profile.pdf`; replace this file when approved profile content changes.
+
+The desktop navigation switches to tap navigation at 1100px. Enquiry links allowlist both interest and type. General enquiries default to **General enquiry**. The contact hero is shorter and the form explains that a visitor must send the prepared email or WhatsApp message.
+
+To refresh the existing review channel from the owner's Google Cloud Shell checkout:
+
+```bash
+cd ~/bmtech-website-hosting
+git pull --ff-only origin feat/brand-product-experience
+git rev-parse HEAD
+npm ci
+firebase hosting:channel:deploy review --expires 7d --project bmtech-website
+```
+
+Compare the displayed commit with the reviewed PR head before deploying. After deployment, `/build-info.json` exposes the source commit, whether tracked source was modified at build time, and the UTC build timestamp. This avoids confusing an older review deployment with newer repository changes. GitHub Actions builds and tests only; production deployment remains a separate owner action.
