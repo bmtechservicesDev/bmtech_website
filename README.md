@@ -1,115 +1,124 @@
 # BM Tech Services website
 
-Responsive company website based on the BM Tech Services Company Profile. Built as a lightweight Vite multi-page static site with plain JavaScript and CSS. There is no runtime framework or backend dependency.
+BM Tech Services is an end-to-end digital solution provider. The website presents industry software, smart and embedded systems, and the engineering services that connect them. It is a lightweight Vite multi-page static site with plain JavaScript and CSS, with no runtime framework or submission backend.
 
 ## Local development
 
 Requires Node.js 20.19+ or 22.12+.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite. Run `npm run build` to produce `dist/` and `npm run preview` to inspect the production output.
+Open the local URL printed by Vite. `npm run build` produces `dist/`; `npm run preview` serves the production output. Each route has its own HTML entry file. The build renders page content and metadata into the HTML, and browser JavaScript attaches menu and enquiry interactions.
 
-## Browser review
+## Pages and portfolio
 
-GitHub Actions runs Chromium checks for all pages at 320, 375, 480, 768, 1024, 1280, 1440 and 1920 pixels, checks keyboard menu dismissal, service preselection, validation, draft freshness, email/WhatsApp encoding, copy fallback and reduced motion, and uploads full-page screenshots as the `website-browser-review` artifact. To run locally after building: `npx playwright install chromium`, then `npx playwright test`.
+| Route | Purpose |
+| --- | --- |
+| `/` | Company positioning and the five portfolio families |
+| `/products/` | Product catalogue organised by family |
+| `/products/hospitality/` | Restaurant Solution, Guest House, Hotel and Lodge |
+| `/products/healthcare/` | Hospital, Clinic Automation, Pharmacy, EMR, EHR, PMS, LIS, RIS and SIS |
+| `/products/education/` | School Management App and Parent App, with the existing My School identity retained |
+| `/products/embedded-systems/` | Home Automation, Queue Management, Smart LED and IoT Gateway |
+| `/products/hr/` | HR Solution |
+| `/solutions/` | Seven business needs connected to relevant products and services |
+| `/industries/` | Industry context, including cross-industry embedded and workforce needs |
+| `/services/` | Ten engineering and delivery capabilities |
+| `/resources/` | Downloadable company profile and project planning guidance |
+| `/about/` | Company positioning and delivery approach |
+| `/contact/` | Enquiry brief and draft preparation |
+| `/book-a-demo/` | Product demo request and draft preparation |
 
-## Pages and content
+The catalogue contains 20 offering entries. This is an editorial inventory, not a claim that every entry is a separate packaged application or has the same maturity. PMS and SIS remain unexpanded pending owner confirmation. My School is retained without assuming how it relates commercially to the School Management App and Parent App. Published features are limited to the supplied scope and existing verified website descriptions.
 
-- `/` — Home
-- `/services/` — Capabilities
-- `/solutions/` — Custom development and transformation
-- `/products/` — Restaurant Solution, Clinic Automation, My School, IoT Gateway, Smart LED, Queue Management, Website Development & Hosting, and Domain Training & Education
-- `/industries/` — Industry context and possibilities
-- `/resources/` — Downloadable company profile, project planning prompts and FAQs
-- `/about/` — Company and process
-- `/contact/` — Enquiry brief
+The header remains **Products · Industries · Solutions · Resources · Book a demo**. Products are named offerings; Solutions describe business needs; Industries explain sector context; Services describe engineering work. The footer has five columns, with About us and Contact us under Company. Public contact-detail blocks remain removed.
 
-Page copy, service cards, industry cards and the shared navigation/footer are in `src/main.js`. The visual system and responsive breakpoints are in `src/styles.css`. Each route has an HTML entry file so a static host can serve deep links without a rewrite rule. The build pre-renders content and route-specific metadata into each HTML file; JavaScript attaches navigation and enquiry interactions.
+## Content and source map
 
-## Enquiry setup
+| File | Responsibility |
+| --- | --- |
+| `src/content.js` | Product families, offering descriptions, solutions, industries and service catalogue |
+| `src/site.js` | Page templates, shared navigation/footer, enquiry options and draft destinations |
+| `src/main.js` | Browser menus, validation, allowlisted preselection and enquiry draft interactions |
+| `src/styles.css` | Approved brand palette, layout, responsive behaviour and accessibility styles |
+| `src/routes.js` | Shared registry of all 14 routes |
+| `src/seo.js` | Environment validation, page metadata, canonical URLs, social tags and structured data |
+| `scripts/prerender.mjs` | Static HTML rendering, robots/sitemap output and build provenance |
+| `scripts/verify-routes.mjs` | Checks that every built route contains distinct metadata and meaningful content |
+| `scripts/generate-company-profile.py` | Reproducible company profile generated from the shared content catalogue |
+| `public/documents/bm-tech-services-company-profile.pdf` | Publicly linked company profile |
 
-The supplied contact screenshots authorize these public company details:
+The approved company name is **BM Tech Services**, with **BMTech** as the short form. Shared brand copy uses **Engineering Intelligence | Transforming Business** and **AI • Cloud • IoT • Automation • Digital Transformation**. Approved logo derivatives are in `public/brand/`; the artwork is preserved. Fonts use the system stack and no external font request is required.
 
-- Email: `bmtechservices2025@gmail.com`
-- Phone: `+91 96426 68815`
-- Address: Flat No. 35001, Block 3, Wing A, Janapriya Utopia, Janapriya Utopia Road, Attapur, in front of Apollo Pharmacy, Hyderguda, Rajendranagar, Rangareddy – 500048, Telangana.
+For the rationale, scope decisions and remaining owner inputs, see [SEO and industry implementation](docs/SEO-INDUSTRY-IMPLEMENTATION.md). Earlier [UI/UX](docs/UI-UX-REVIEW.md) and [market-readiness](docs/MARKET-READINESS-REVIEW.md) reviews are historical records; their route counts and editor instructions may describe earlier versions.
 
-Update these in the `contact` object in `src/main.js`. The second personal email in the screenshot is intentionally excluded because the instruction specified the BMTech Gmail address.
+## SEO environment
 
-The contact form validates inputs locally and prepares a formatted enquiry. **Open email draft** opens the visitor's configured email app with recipient, subject and body filled in; the visitor must send the email. **Enquire on WhatsApp** opens the same enquiry as a prepared message to +91 96426 68815; the visitor reviews and sends it in WhatsApp. Direct WhatsApp links are also available on Contact and in the footer. Copying the enquiry is available as a fallback. The website does not claim delivery or store enquiries. If introducing server-side submissions later, configure a secure endpoint, delivery monitoring and appropriate privacy information. Do not put API secrets in frontend code.
+No production hostname is assumed. Copy the keys in `.env.example` into the build environment when a domain has been verified:
 
-The approved logo and favicon are supplied by the owner. Optimized derivatives are in `public/brand/`. The full supplied square artwork is used for favicon sizes, preserving the design; fine wording is naturally unreadable at small tab-icon sizes. Confirm the company domain, product scope/availability, social links and privacy policy before adding public claims.
-
-## Deployment
-
-### Google Cloud / Firebase Hosting
-
-Target project: `bmtech-website` (project number `74431502417`). This configuration deploys only static Firebase Hosting files; it does not provision a backend or database. Native page directories remain intact, with trailing slashes and no SPA catch-all rewrite. Hashed assets receive immutable caching. The predeploy hook builds fresh output.
-
-From Google Cloud Shell, use Node.js 22.12+ and an account with access to this project. Install the official Firebase CLI:
-
-```bash
-npm install -g firebase-tools
-firebase login --no-localhost
-firebase projects:list
+```dotenv
+SITE_URL=
+SITE_INDEXABLE=false
 ```
 
-If `bmtech-website` is not yet a Firebase project, add Firebase to the existing Google Cloud project (do not create a second project):
+`SITE_URL`, when supplied, must be a valid HTTPS origin without credentials, a path, a query or a fragment. A trailing slash is normalised. `SITE_INDEXABLE` accepts only `true` or `false`; it defaults to `false`. An indexable build fails if its origin is missing or local.
+
+| Build configuration | Search behaviour |
+| --- | --- |
+| No origin, default settings | `noindex, follow`; no invented canonical, sitemap or absolute social image URLs |
+| Verified origin, `SITE_INDEXABLE=false` | Preview stays `noindex`; canonical, social and applicable structured metadata use the configured origin; no sitemap |
+| Verified origin, `SITE_INDEXABLE=true` | Indexable metadata, canonical URLs, absolute social URLs, applicable structured data, a 14-route sitemap and a robots sitemap declaration |
+
+Robots rules allow crawlers to fetch pages and read their `noindex` directive. Do not block crawling as a substitute for preview `noindex`. Hosting response headers may also restrict indexing; verify those separately before any future production launch. Canonicals do not override a `noindex` response header or HTML directive.
+
+Every page has a distinct title, description and H1 in its initial HTML. Product family pages have their own routes and contextual internal links. Structured data describes the organisation and applicable breadcrumb trails without ratings, prices or unverified credentials.
+
+## Enquiry and demo behaviour
+
+The forms validate inputs locally and **prepare a draft**. They do not submit to a server, confirm delivery or reserve a demo slot. The action labels are **Prepare enquiry** and **Prepare demo request**.
+
+Both forms offer the shared product/service choices. Demo requests require a selection; general enquiries allow an optional selection. Query parameters are allowlisted. Editing a source field hides a stale prepared draft. The visitor can open an email draft, prepare a WhatsApp message or copy the enquiry, and must complete sending in the chosen application.
+
+Draft destinations are held in the `contact` object in `src/site.js`; they are not presented as public contact-detail blocks. No visitor database, automated email delivery or live AI service is introduced. If server-side delivery is implemented later, use a secure endpoint and appropriate privacy information. Never put API secrets in frontend code.
+
+## Verification
 
 ```bash
-firebase projects:addfirebase bmtech-website
+npm run test:seo
+npm run build
+npm run verify:routes
+npx playwright install chromium
+npm test
 ```
 
-If Firebase asks for acceptance of terms or reports missing permissions, complete the required setup with the project owner in the Firebase console. Then, from this repository:
+The Node tests cover SEO configuration validation, metadata replacement, URL escaping, sitemap output and structured data. The route verifier checks all 14 built pages. Playwright checks the pages at 320, 375, 480, 768, 1024, 1280, 1440 and 1920 pixels, plus navigation, local link destinations, all 20 portfolio entries, legacy anchors, form validation, preselection, stale drafts, encoded draft links, clipboard fallback and reduced motion.
+
+GitHub Actions runs on pull requests and pushes to `main`, builds the website, runs these checks and uploads the `website-browser-review` screenshot artifact. The workflow does not deploy. A feature-branch push alone does not trigger this workflow; a draft pull request can run the same review checks.
+
+To regenerate the company profile with Node.js, Python, ReportLab and Pillow installed:
+
+```bash
+python3 scripts/generate-company-profile.py
+```
+
+Render and visually review all PDF pages after changing the generator or catalogue before replacing the public asset. Keep intermediate renders outside the repository.
+
+## Hosting and release
+
+The existing Firebase Hosting target is `bmtech-website` (project number `74431502417`). It hosts static files only. Route directories and trailing slashes are preserved, there is no SPA catch-all rewrite, and hashed assets have immutable caching. The predeploy hook builds fresh output. Do not run `firebase init hosting` over the existing configuration.
+
+Deployment is a separate requested action. For a later authorised review-channel update from a configured Firebase CLI session:
 
 ```bash
 npm ci
-firebase hosting:channel:deploy review --expires 7d --project bmtech-website
+SITE_INDEXABLE=false firebase hosting:channel:deploy review --expires 7d --project bmtech-website
 ```
 
-That command builds the website and returns a temporary, publicly accessible preview URL. Check all eight pages, plus the email and WhatsApp draft actions. To publish the production site after review:
+That command returns the actual temporary review URL. Review all 14 routes and the email/WhatsApp draft actions.
 
-```bash
-firebase deploy --only hosting --project bmtech-website
-```
+Before a later authorised production release, verify the production origin and set **both** `SITE_URL` to that HTTPS origin and `SITE_INDEXABLE=true` in the build environment. Then use the existing `firebase deploy --only hosting --project bmtech-website` command. Running that command with default settings publishes a **noindex** build. Confirm the final HTML, canonical URLs, robots file, sitemap and response headers on the returned production URL.
 
-Use the exact Hosting URL returned by the CLI. Future updates use the same command after pulling approved changes. Do not run `firebase init hosting` over this configuration, because it can overwrite the Hosting settings. No Firebase credentials or service account keys belong in the repository. GitHub CI remains build/test only and does not automatically publish.
-
-Publish the contents of `dist/` to any static web host. The build generates `index.html` and `services/index.html`, `solutions/index.html`, `about/index.html`, `contact/index.html`, `products/index.html`, `industries/index.html` and `resources/index.html`. Configure HTTPS, caching for versioned assets, and the canonical domain after those details are confirmed. The site assumes deployment at the domain root.
-
-
-## UI/UX review
-
-The audit, priorities, design tokens, before/after rationale and validation limits are documented in [docs/UI-UX-REVIEW.md](docs/UI-UX-REVIEW.md). The current site uses the approved navy/cyan/blue/orange logo palette, a content-first hero and light mega menus, with shared semantic color, spacing and radius tokens. Service cards link to Contact with an allowlisted service parameter. The browser validates locally and prepares messages; no delivery backend or visitor data storage was introduced.
-
-## October brand and UX enhancement
-
-Source: owner’s `change_request1.jpeg`, `BMTech-Logo.jpeg`, `BMTech-Favicon.jpeg`, and retrieved decisions from “Website UX Brief”. The site separates products, industries, solutions and planning resources. Product descriptions identify workflow areas for a scope discussion. Specifications, integrations and commercial availability are agreed during discovery; no pricing or customer proof is invented.
-
-Edit `products`, `solutionGroups`, `industries`, and page templates in `src/main.js`. Demo links allowlist `type` and `service` query values; form fields include optional phone and enquiry type. All source fields hide stale drafts when edited.
-
-AI is presented as an engineering capability with practical workflow discussion prompts. There is no live AI model, chatbot or automated recommendation service. Activating one requires a secure server endpoint, provider configuration, evaluation, privacy information and abuse/rate controls; credentials must stay server-side.
-
-Fonts use a system stack with no external font request. No new runtime dependency was added. Brand image dimensions are explicit and the logo is compressed WebP. All eight routes are prerendered for static delivery and search visibility.
-
-## Market-readiness refinement
-
-The [latest review](docs/MARKET-READINESS-REVIEW.md) compares the supplied Firebase preview with the current feature branch. Cards now explain workflow areas and link to contextual enquiries. CRM, business automation and digital marketing are explicit capabilities. The existing My School and IoT Gateway offerings remain alongside the six company-profile portfolio areas. The client-ready profile is available at `public/documents/bm-tech-services-company-profile.pdf`; replace this file when approved profile content changes.
-
-The desktop navigation switches to tap navigation at 1100px. Enquiry links allowlist both interest and type. General enquiries default to **General enquiry**. The contact hero is shorter and the form explains that a visitor must send the prepared email or WhatsApp message.
-
-To refresh the existing review channel from the owner's Google Cloud Shell checkout:
-
-```bash
-cd ~/bmtech-website-hosting
-git pull --ff-only origin feat/brand-product-experience
-git rev-parse HEAD
-npm ci
-firebase hosting:channel:deploy review --expires 7d --project bmtech-website
-```
-
-Compare the displayed commit with the reviewed PR head before deploying. After deployment, `/build-info.json` exposes the source commit, whether tracked source was modified at build time, and the UTC build timestamp. This avoids confusing an older review deployment with newer repository changes. GitHub Actions builds and tests only; production deployment remains a separate owner action.
+No Firebase credentials or service-account keys belong in the repository. No new project, backend or database is needed for these content changes. `/build-info.json` records the source commit, whether tracked files were modified at build time, and the UTC build timestamp; compare it with the reviewed commit when validating a deployed build.
