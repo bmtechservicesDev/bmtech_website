@@ -213,8 +213,8 @@ test('Company footer replaces all visible contact blocks', async ({page}) => {
     const company = page.locator('.footer-column').filter({has:page.getByRole('heading',{name:'Company',exact:true})});
     await expect(company.getByRole('link',{name:'About us',exact:true})).toHaveAttribute('href','/about/');
     await expect(company.getByRole('link',{name:'Contact us',exact:true})).toHaveAttribute('href','/contact/');
-    await expect(page.locator('main, footer')).not.toContainText('bmtechservices2025@gmail.com');
-    await expect(page.locator('main, footer')).not.toContainText('Janapriya Utopia');
+    await expect(page.locator('body')).not.toContainText('bmtechservices2025@gmail.com');
+    await expect(page.locator('body')).not.toContainText('Janapriya Utopia');
     await expect(page.locator('main .contact-details')).toHaveCount(0);
   }
 });
