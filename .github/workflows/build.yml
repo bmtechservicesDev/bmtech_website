@@ -24,7 +24,7 @@ jobs:
           retention-days: 7
       - name: Verify generated routes
         run: |
-          for page in index.html services/index.html solutions/index.html about/index.html contact/index.html; do
+          for page in index.html services/index.html solutions/index.html about/index.html contact/index.html products/index.html industries/index.html resources/index.html; do
             test -s "dist/$page"
             grep -q '<main id="main">' "dist/$page"
           done
