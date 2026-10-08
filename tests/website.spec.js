@@ -25,8 +25,8 @@ test('Mobile menu allows navigation', async ({ page }) => {
   await toggle.click();
   await expect(page.getByRole('button', { name: 'Close navigation' })).toHaveAttribute('aria-expanded', 'true');
   await page.getByRole('button', {name:'Products submenu',exact:true}).click();
-  await page.locator('#submenu-0 .dropdown-overview').click();
-  await expect(page).toHaveURL(/\/products\/$/);
+  await page.locator('#submenu-0').getByRole('link', {name:'Restaurant Solution',exact:true}).click();
+  await expect(page).toHaveURL(/\/products\/#product-0$/);
   await expect(page.locator('nav button[aria-current="page"]')).toHaveText('Products');
 });
 
@@ -297,4 +297,17 @@ test('Reference header contains four plain headings and one demo CTA', async ({p
   await page.getByRole('button',{name:'Products submenu',exact:true}).hover();
   await expect(page.locator('#submenu-0')).toBeVisible();
   await page.screenshot({path:testInfo.outputPath('reference-header.png'),fullPage:false});
+});
+
+test('Dropdowns start with cards without an Explore row', async ({page},testInfo) => {
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('/');
+  for(const label of ['Products','Industries','Solutions','Resources']) {
+    await page.getByRole('button',{name:label+' submenu',exact:true}).hover();
+    const panel=page.locator('.nav-dropdown:not([hidden])');
+    await expect(panel.locator('.dropdown-overview')).toHaveCount(0);
+    await expect(panel.locator('.mega-card').first()).toBeVisible();
+    expect(await panel.evaluate(el=>el.firstElementChild.classList.contains('mega-card'))).toBe(true);
+    await page.screenshot({path:testInfo.outputPath(label.toLowerCase()+'-compact-dropdown.png'),fullPage:false});
+  }
 });
