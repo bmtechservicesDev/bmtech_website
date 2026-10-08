@@ -2,6 +2,8 @@
 
 BM Tech Services is an end-to-end digital solution provider. The website presents industry software, smart and embedded systems, and the engineering services that connect them. It is a lightweight Vite multi-page static site with plain JavaScript and CSS, with no runtime framework or submission backend.
 
+The frontend rebuild on `feat/bmtech-website-rebuild-20261008` starts from commit `2db9a1d`. It replaces the page markup, shared UI, CSS and browser interaction modules while carrying forward the approved content, 14 routes, SEO configuration, company profile and Firebase Hosting setup. See [Website rebuild](docs/WEBSITE-REBUILD.md) for the architecture, review scope and stacked-PR merge sequence.
+
 ## Local development
 
 Requires Node.js 20.19+ or 22.12+.
@@ -11,14 +13,14 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite. `npm run build` produces `dist/`; `npm run preview` serves the production output. Each route has its own HTML entry file. The build renders page content and metadata into the HTML, and browser JavaScript attaches menu and enquiry interactions.
+Open the local URL printed by Vite. `npm run build` produces `dist/`; `npm run preview` serves the production output. Each route has its own HTML entry file. The build renders page content and metadata into the HTML, and browser JavaScript attaches navigation, product search/filter and enquiry interactions.
 
 ## Pages and portfolio
 
 | Route | Purpose |
 | --- | --- |
 | `/` | Company positioning and the five portfolio families |
-| `/products/` | Product catalogue organised by family |
+| `/products/` | Product catalogue organised by family, with enhanced search and filters |
 | `/products/hospitality/` | Restaurant Solution, Guest House, Hotel and Lodge |
 | `/products/healthcare/` | Hospital, Clinic Automation, Pharmacy, EMR, EHR, PMS, LIS, RIS and SIS |
 | `/products/education/` | School Management App and Parent App, with the existing My School identity retained |
@@ -36,14 +38,23 @@ The catalogue contains 20 offering entries. This is an editorial inventory, not 
 
 The header remains **Products · Industries · Solutions · Resources · Book a demo**. Products are named offerings; Solutions describe business needs; Industries explain sector context; Services describe engineering work. The footer has five columns, with About us and Contact us under Company. Public contact-detail blocks remain removed.
 
+The product catalogue uses progressive enhancement: the initial HTML contains all 20 entries and their family links. Search and family-filter controls remain hidden until their browser controller is ready. With JavaScript disabled, visitors can still read every offering and follow its links; no inactive search controls are shown.
+
 ## Content and source map
 
 | File | Responsibility |
 | --- | --- |
 | `src/content.js` | Product families, offering descriptions, solutions, industries and service catalogue |
-| `src/site.js` | Page templates, shared navigation/footer, enquiry options and draft destinations |
-| `src/main.js` | Browser menus, validation, allowlisted preselection and enquiry draft interactions |
-| `src/styles.css` | Approved brand palette, layout, responsive behaviour and accessibility styles |
+| `src/components.js` | Shared UI helpers, icons, navigation, footer, page introductions and delivery process |
+| `src/site.js` | Home page, page registry and route rendering |
+| `src/pages/portfolio.js` | Product catalogue, search/filter markup and five product-family pages |
+| `src/pages/company.js` | Solutions, Industries, Services, Resources and About page templates |
+| `src/pages/enquiry.js` | Contact/demo templates, shared enquiry choices and draft destinations |
+| `src/navigation.js` | Desktop and mobile navigation behaviour |
+| `src/catalogue.js` | Progressive product search and family filtering |
+| `src/enquiry-controller.js` | Form validation, allowlisted preselection and visitor-sent draft preparation |
+| `src/main.js` | Browser entry point that initialises the interaction modules |
+| `src/styles.css` | Rebuilt visual system, responsive layouts, component and accessibility styles |
 | `src/routes.js` | Shared registry of all 14 routes |
 | `src/seo.js` | Environment validation, page metadata, canonical URLs, social tags and structured data |
 | `scripts/prerender.mjs` | Static HTML rendering, robots/sitemap output and build provenance |
@@ -53,7 +64,9 @@ The header remains **Products · Industries · Solutions · Resources · Book a 
 
 The approved company name is **BM Tech Services**, with **BMTech** as the short form. Shared brand copy uses **Engineering Intelligence | Transforming Business** and **AI • Cloud • IoT • Automation • Digital Transformation**. Approved logo derivatives are in `public/brand/`; the artwork is preserved. Fonts use the system stack and no external font request is required.
 
-For the rationale, scope decisions and remaining owner inputs, see [SEO and industry implementation](docs/SEO-INDUSTRY-IMPLEMENTATION.md). Earlier [UI/UX](docs/UI-UX-REVIEW.md) and [market-readiness](docs/MARKET-READINESS-REVIEW.md) reviews are historical records; their route counts and editor instructions may describe earlier versions.
+Edit approved offering copy in `src/content.js`; edit page structure in the appropriate `src/pages/` module or the home page in `src/site.js`. Shared UI changes belong in `src/components.js`, presentation in `src/styles.css` and browser interactions in their dedicated controller. Keep existing route and fragment destinations when reorganising content.
+
+For the content rationale, scope decisions and remaining owner inputs, see [SEO and industry implementation](docs/SEO-INDUSTRY-IMPLEMENTATION.md). The [Website rebuild](docs/WEBSITE-REBUILD.md) describes the current frontend architecture. Earlier [UI/UX](docs/UI-UX-REVIEW.md), [brand enhancement](docs/BRAND-UX-ENHANCEMENT.md) and [market-readiness](docs/MARKET-READINESS-REVIEW.md) reviews are historical records; their route counts and editor instructions may describe earlier versions.
 
 ## SEO environment
 
@@ -82,7 +95,7 @@ The forms validate inputs locally and **prepare a draft**. They do not submit to
 
 Both forms offer the shared product/service choices. Demo requests require a selection; general enquiries allow an optional selection. Query parameters are allowlisted. Editing a source field hides a stale prepared draft. The visitor can open an email draft, prepare a WhatsApp message or copy the enquiry, and must complete sending in the chosen application.
 
-Draft destinations are held in the `contact` object in `src/site.js`; they are not presented as public contact-detail blocks. No visitor database, automated email delivery or live AI service is introduced. If server-side delivery is implemented later, use a secure endpoint and appropriate privacy information. Never put API secrets in frontend code.
+Draft destinations are held in the `contact` object in `src/pages/enquiry.js` and imported by `src/enquiry-controller.js`. The contact and choice exports are also re-exported by `src/site.js` for compatibility. They are not presented as public contact-detail blocks. No visitor database, automated email delivery or live AI service is introduced. If server-side delivery is implemented later, use a secure endpoint and appropriate privacy information. Never put API secrets in frontend code.
 
 ## Verification
 
@@ -94,7 +107,7 @@ npx playwright install chromium
 npm test
 ```
 
-The Node tests cover SEO configuration validation, metadata replacement, URL escaping, sitemap output and structured data. The route verifier checks all 14 built pages. Playwright checks the pages at 320, 375, 480, 768, 1024, 1280, 1440 and 1920 pixels, plus navigation, local link destinations, all 20 portfolio entries, legacy anchors, form validation, preselection, stale drafts, encoded draft links, clipboard fallback and reduced motion.
+The Node tests cover SEO configuration validation, metadata replacement, URL escaping, sitemap output and structured data. The route verifier checks all 14 built pages. Playwright covers responsive pages at 320, 375, 480, 768, 1024, 1280, 1440 and 1920 pixels, navigation, local link destinations, the portfolio, legacy anchors and enquiry interactions. Rebuild review also needs product search/filter, JavaScript-disabled catalogue and screenshot checks. See the pull request and its workflow run for results; the commands listed here do not establish that a particular commit has passed.
 
 GitHub Actions runs on pull requests and pushes to `main`, builds the website, runs these checks and uploads the `website-browser-review` screenshot artifact. The workflow does not deploy. A feature-branch push alone does not trigger this workflow; a draft pull request can run the same review checks.
 
@@ -121,4 +134,4 @@ That command returns the actual temporary review URL. Review all 14 routes and t
 
 Before a later authorised production release, verify the production origin and set **both** `SITE_URL` to that HTTPS origin and `SITE_INDEXABLE=true` in the build environment. Then use the existing `firebase deploy --only hosting --project bmtech-website` command. Running that command with default settings publishes a **noindex** build. Confirm the final HTML, canonical URLs, robots file, sitemap and response headers on the returned production URL.
 
-No Firebase credentials or service-account keys belong in the repository. No new project, backend or database is needed for these content changes. `/build-info.json` records the source commit, whether tracked files were modified at build time, and the UTC build timestamp; compare it with the reviewed commit when validating a deployed build.
+No Firebase credentials or service-account keys belong in the repository. The frontend rebuild does not introduce Sites, Hercules, a new hosting project, backend or database. `/build-info.json` records the source commit, whether tracked files were modified at build time, and the UTC build timestamp; compare it with the reviewed commit when validating a deployed build.

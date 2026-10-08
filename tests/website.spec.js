@@ -179,7 +179,7 @@ test('Mega menu cards fit desktop and mobile viewports', async ({ page }, testIn
     if (width < 1101) await button.click();
     else await button.hover();
     await expect(page.locator('#submenu-2 .mega-card')).toHaveCount(8);
-    await expect(page.locator('#submenu-2 .mega-icon svg').first()).toBeVisible();
+    await expect(page.locator('#submenu-2 .mega-card').first()).toBeVisible();
     // On touch layouts, expanded cards scroll inside the navigation panel.
     if (width > 1100) {
       const demo = page.getByRole('link', { name: 'Book a demo', exact: true });
@@ -271,12 +271,16 @@ test('Repeated card enquiry actions are removed on every page', async ({page}) =
   }
 });
 
-test('Shared footer and page links follow the reference cleanup', async ({ page }) => {
+test('Shared footer preserves brand wording and the five navigation columns', async ({ page }) => {
   for (const route of routes) {
     await page.goto(route);
     await expect(page.locator('main .section-end')).toHaveCount(0);
-    await expect(page.locator('.offering-card strong')).toHaveCount(0);
     await expect(page.locator('footer .footer-column')).toHaveCount(5);
+    await expect(page.locator('footer .footer-column').getByRole('heading'))
+      .toHaveText(['Products', 'Industries', 'Solutions', 'Resources', 'Company']);
+    await expect(page.locator('footer')).toContainText('Engineering Intelligence | Transforming Business');
+    await expect(page.locator('footer')).toContainText(/AI\s*•\s*Cloud\s*•\s*IoT\s*•\s*Automation\s*•\s*Digital Transformation/);
+    await expect(page.locator('.site-header .brand')).toHaveAttribute('href', '/');
     await expect(page.locator('footer .button')).toHaveCount(0);
   }
 });
@@ -340,7 +344,7 @@ test('Contact validates names email and consent and prepares accurate draft', as
 test('Every portfolio entry is visible on the hub and its family page', async ({ page }) => {
   await page.goto('/products/');
   const main = page.locator('main');
-  await expect(main.locator('.family-card')).toHaveCount(5);
+  await expect(main.locator('[data-product-family]')).toHaveCount(5);
   await expect(main.locator('.portfolio-links a')).toHaveCount(20);
   for (const family of portfolioFamilies) {
     const group = main.locator(`[data-product-family="${family.id}"]`);
@@ -355,9 +359,11 @@ test('Every portfolio entry is visible on the hub and its family page', async ({
   }
   for (const family of portfolioFamilies) {
     await page.goto(`/products/${family.id}/`);
-    await expect(main.locator('.product-card')).toHaveCount(family.products.length);
+    await expect(main.locator('.product-card[data-product]')).toHaveCount(family.products.length);
     for (const [id, name] of family.products) {
-      await expect(main.locator(`[id="${id}"]`).getByRole('heading', { name, exact: true })).toBeVisible();
+      const product = main.locator(`.product-card[data-product="${id}"]`);
+      await expect(product).toHaveAttribute('id', id);
+      await expect(product.getByRole('heading', { name, exact: true })).toBeVisible();
     }
   }
 });
@@ -366,7 +372,8 @@ test('Homepage and product menu lead to all five families with nested breadcrumb
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   for (const family of portfolioFamilies) {
-    expect(await page.locator(`main a[href="/products/${family.id}/"]`).count(), family.label).toBeGreaterThan(0);
+    await expect(page.locator('main .family-grid').getByRole('link', { name: family.label, exact: true }))
+      .toHaveAttribute('href', `/products/${family.id}/`);
   }
   await page.getByRole('button', { name: 'Products submenu', exact: true }).hover();
   await expect(page.locator('#submenu-0 .mega-card')).toHaveCount(6);
@@ -455,4 +462,162 @@ test('Demo preselection supports a new offering and rejects an unknown option', 
 
   await page.goto('/book-a-demo/?service=Unknown%20Product');
   await expect(page.locator('[name="interest"]')).toHaveValue('');
+});
+
+test('Catalogue search and family filters combine and clear restores the full portfolio', async ({ page }) => {
+  await page.goto('/products/');
+  const controls = page.locator('[data-catalogue-controls]');
+  const search = page.getByRole('searchbox', { name: 'Search products', exact: true });
+  const entries = page.locator('main [data-product-entry]:visible');
+  const families = page.locator('main [data-product-family]:visible');
+  const status = page.locator('#portfolio-status');
+  const empty = page.locator('#portfolio-empty');
+  await expect(controls).toBeVisible();
+  await expect(search).toHaveAttribute('id', 'portfolio-search');
+  await expect(status).toHaveAttribute('role', 'status');
+  await expect(entries).toHaveCount(20);
+  await expect(families).toHaveCount(5);
+  await expect(status).toContainText(/^20 offerings\b/);
+  await expect(empty).toBeHidden();
+
+  await search.fill('Clinic Automation');
+  await expect(entries).toHaveCount(1);
+  await expect(entries.getByRole('link', { name: 'Clinic Automation', exact: true })).toBeVisible();
+  await expect(families).toHaveCount(1);
+  await expect(families).toHaveAttribute('data-product-family', 'healthcare');
+  await expect(status).toContainText(/^1 offering\b/);
+  // The search index includes the approved product description, not just its name.
+  await search.fill('after a visit');
+  await expect(entries).toHaveCount(1);
+  await expect(entries.getByRole('link', { name: 'Clinic Automation', exact: true })).toBeVisible();
+
+  await search.fill('');
+  await page.locator('[data-family-filter="hospitality"]').click();
+  await expect(page.locator('[data-family-filter="hospitality"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-family-filter="all"]')).toHaveAttribute('aria-pressed', 'false');
+  await expect(entries).toHaveCount(4);
+  await expect(families).toHaveCount(1);
+  await expect(families).toHaveAttribute('data-product-family', 'hospitality');
+  await expect(status).toContainText(/^4 offerings\b/);
+
+  await search.fill('pharmacy');
+  await expect(entries).toHaveCount(0);
+  await expect(families).toHaveCount(0);
+  await expect(empty).toBeVisible();
+  await expect(status).toContainText(/^No offerings\b/i);
+  await empty.locator('[data-clear-filters]').click();
+  await expect(search).toHaveValue('');
+  await expect(page.locator('[data-family-filter="all"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-family-filter="hospitality"]')).toHaveAttribute('aria-pressed', 'false');
+  await expect(entries).toHaveCount(20);
+  await expect(families).toHaveCount(5);
+  await expect(empty).toBeHidden();
+  await expect(status).toContainText(/^20 offerings\b/);
+});
+
+test('Catalogue filters and search are usable from the keyboard', async ({ page }) => {
+  await page.goto('/products/');
+  const entries = page.locator('main [data-product-entry]:visible');
+  const all = page.locator('[data-family-filter="all"]');
+  const hospitality = page.locator('[data-family-filter="hospitality"]');
+  const healthcare = page.locator('[data-family-filter="healthcare"]');
+  const search = page.getByRole('searchbox', { name: 'Search products', exact: true });
+  await all.focus();
+  await page.keyboard.press('Tab');
+  await expect(hospitality).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(hospitality).toHaveAttribute('aria-pressed', 'true');
+  await expect(entries).toHaveCount(4);
+  await page.keyboard.press('Tab');
+  await expect(healthcare).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(healthcare).toHaveAttribute('aria-pressed', 'true');
+  await expect(hospitality).toHaveAttribute('aria-pressed', 'false');
+  await expect(entries).toHaveCount(9);
+  await search.focus();
+  await page.keyboard.type('Clinic Automation');
+  await expect(entries).toHaveCount(1);
+  await expect(entries.getByRole('link', { name: 'Clinic Automation', exact: true })).toBeVisible();
+  await page.keyboard.press('ControlOrMeta+A');
+  await page.keyboard.press('Backspace');
+  await expect(search).toHaveValue('');
+  await expect(entries).toHaveCount(9);
+});
+
+test('Legacy product hash navigation reveals destinations hidden by catalogue filters', async ({ page }) => {
+  await page.goto('/products/');
+  const search = page.getByRole('searchbox', { name: 'Search products', exact: true });
+  await page.locator('[data-family-filter="hospitality"]').click();
+  await search.fill('restaurant');
+  await expect(page.locator('main [data-product-entry]:visible')).toHaveCount(1);
+  await expect(page.locator('main [data-product-family="healthcare"]')).toBeHidden();
+  // A same-document fragment change must recover a previously hidden destination.
+  await page.evaluate(() => { window.location.hash = 'product-1'; });
+  await expect(page).toHaveURL(/\/products\/#product-1$/);
+  await expect(search).toHaveValue('');
+  await expect(page.locator('[data-family-filter="all"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('main [data-product-entry]:visible')).toHaveCount(20);
+  await expect(page.locator('main [data-product-family="healthcare"]')).toBeVisible();
+  const clinic = page.locator('main .portfolio-links').getByRole('link', { name: 'Clinic Automation', exact: true });
+  await expect(clinic).toBeVisible();
+  await expect(clinic).toBeInViewport();
+});
+
+test('Without JavaScript the complete portfolio remains readable and filtering stays hidden', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await page.goto('/products/');
+    await expect(page.locator('[data-catalogue-controls]')).toHaveCount(1);
+    await expect(page.locator('[data-catalogue-controls]')).toBeHidden();
+    await expect(page.locator('main [data-product-entry]:visible')).toHaveCount(20);
+    await expect(page.locator('main [data-product-family]:visible')).toHaveCount(5);
+    for (const family of portfolioFamilies) {
+      const group = page.locator(`main [data-product-family="${family.id}"]`);
+      for (const [, name] of family.products) {
+        await expect(group.getByRole('link', { name, exact: true })).toBeVisible();
+      }
+    }
+    await page.locator('main .portfolio-links').getByRole('link', { name: 'Clinic Automation', exact: true }).click();
+    await expect(page).toHaveURL(/\/products\/healthcare\/#clinic-automation$/);
+    await expect(page.locator('[data-product="clinic-automation"]').getByRole('heading', { name: 'Clinic Automation', exact: true })).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test('Contact preselection and draft values accept only the supported enquiry choices', async ({ page }) => {
+  const fillContact = async () => {
+    await page.locator('[name="firstName"]').fill('Portfolio');
+    await page.locator('[name="lastName"]').fill('Buyer');
+    await page.locator('[name="email"]').fill('portfolio@example.com');
+    await page.locator('[name="consent"]').check();
+  };
+  await page.goto('/contact/?service=HR%20Solution&type=Digital%20transformation');
+  await expect(page.locator('[name="interest"]')).toHaveValue('HR Solution');
+  await fillContact();
+  await page.getByRole('button', { name: 'Prepare enquiry', exact: true }).click();
+  const supported = new URL(await page.locator('#email-brief').getAttribute('href'));
+  expect(supported.searchParams.get('body')).toContain('Product or service: HR Solution');
+  expect(supported.searchParams.get('body')).toContain('Enquiry type: Digital transformation');
+
+  await page.goto('/contact/?service=Unlisted%20Product&type=Unlisted%20Type');
+  await expect(page.locator('[name="interest"]')).toHaveValue('');
+  await fillContact();
+  await page.getByRole('button', { name: 'Prepare enquiry', exact: true }).click();
+  const fallback = new URL(await page.locator('#email-brief').getAttribute('href'));
+  expect(fallback.searchParams.get('body')).toContain('Product or service: Not specified');
+  expect(fallback.searchParams.get('body')).toContain('Enquiry type: General enquiry');
+  expect(fallback.searchParams.get('body')).not.toContain('Unlisted');
+
+  // A DOM-injected option must not bypass the draft generator's allowlist.
+  await page.locator('[name="interest"]').evaluate(select => {
+    select.add(new Option('Unlisted Product', 'Unlisted Product'));
+  });
+  await page.locator('[name="interest"]').selectOption('Unlisted Product');
+  await expect(page.locator('#form-result')).toBeHidden();
+  await page.getByRole('button', { name: 'Prepare enquiry', exact: true }).click();
+  await expect(page.locator('#interest-error')).toContainText('Choose a product or service from the list.');
+  await expect(page.locator('[name="interest"]')).toBeFocused();
+  await expect(page.locator('#form-result')).toBeHidden();
 });
