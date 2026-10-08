@@ -319,3 +319,13 @@ test('Repeated card enquiry actions are removed on every page', async ({page}) =
     await expect(page.locator('.nav-cta')).toHaveAttribute('href','/contact/?type=Product%20demo');
   }
 });
+
+test('Shared footer and page links follow the reference cleanup', async ({ page }) => {
+  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/']) {
+    await page.goto(route);
+    await expect(page.locator('main .section-end')).toHaveCount(0);
+    await expect(page.locator('.offering-card strong')).toHaveCount(0);
+    await expect(page.locator('footer .footer-column')).toHaveCount(5);
+    await expect(page.locator('footer .button')).toHaveCount(0);
+  }
+});
