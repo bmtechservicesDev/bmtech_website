@@ -514,3 +514,5 @@ em { font-style: normal; color: var(--primary); }
   .dropdown-toggle { width:100%; text-align:left; padding:1rem .5rem; }
   .nav-cta { text-align:center; justify-content:center; }
 }
+
+.nav-cta { height:52px; padding-block:0; align-items:center; }
