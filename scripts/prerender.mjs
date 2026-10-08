@@ -1,28 +1,38 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { renderPage } from '../src/main.js';
+import { loadEnv } from 'vite';
+import { renderPage } from '../src/site.js';
+import { routes } from '../src/routes.js';
+import { applySeoMetadata, createRobotsTxt, createSitemap, resolveSeoConfig } from '../src/seo.js';
 
-const routes = ['/', '/services/', '/solutions/', '/about/', '/contact/', '/products/', '/industries/', '/resources/', '/book-a-demo/'];
-const escapeAttribute = value => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
+const projectRoot = fileURLToPath(new URL('../', import.meta.url));
+const outputRoot = resolve(projectRoot, 'dist');
+const config = resolveSeoConfig({ ...loadEnv('production', projectRoot, 'SITE_'), ...process.env });
 
 for (const route of routes) {
-  const file = resolve('dist', route.slice(1), 'index.html');
+  const file = resolve(outputRoot, route.slice(1), 'index.html');
   const page = renderPage(route);
   let html = await readFile(file, 'utf8');
-  html = html.replace('<div id="app"></div>', `<div id="app">${page.html.replace('<span id="year"></span>', `<span id="year">${new Date().getFullYear()}</span>`)}</div>`);
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeAttribute(page.title)}</title>`);
-  html = html.replace(/(<meta name="description" content=")[^"]*(" \/>)/, `$1${escapeAttribute(page.description)}$2`);
-  html = html.replace(/(<meta property="og:title" content=")[^"]*(" \/>)/, `$1${escapeAttribute(page.title)}$2`);
-  html = html.replace(/(<meta property="og:description" content=")[^"]*(" \/>)/, `$1${escapeAttribute(page.description)}$2`);
+  if (!/<div id="app">\s*<\/div>/.test(html)) throw new Error(`Missing empty app container for ${route}`);
+  const content = page.html.replace('<span id="year"></span>', () => `<span id="year">${new Date().getFullYear()}</span>`);
+  html = html.replace(/<div id="app">\s*<\/div>/, () => `<div id="app">${content}</div>`);
+  html = applySeoMetadata(html, route, page, config);
   await writeFile(file, html);
 }
+
+await writeFile(resolve(outputRoot, 'robots.txt'), createRobotsTxt(config));
+const sitemap = createSitemap(config);
+if (sitemap) await writeFile(resolve(outputRoot, 'sitemap.xml'), sitemap);
+else await rm(resolve(outputRoot, 'sitemap.xml'), { force: true });
 
 // Lets a review deployment be matched to its source without exposing environment data.
 let sourceCommit = null;
 let sourceState = 'unavailable';
 try {
-  sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  sourceState = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).trim() ? 'modified' : 'clean';
+  const gitOptions = { cwd: projectRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] };
+  sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], gitOptions).trim();
+  sourceState = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], gitOptions).trim() ? 'modified' : 'clean';
 } catch { /* Source archives may have no Git metadata. */ }
-await writeFile(resolve('dist', 'build-info.json'), JSON.stringify({ sourceCommit, sourceState, builtAt: new Date().toISOString() }, null, 2) + '\n');
+await writeFile(resolve(outputRoot, 'build-info.json'), JSON.stringify({ sourceCommit, sourceState, builtAt: new Date().toISOString() }, null, 2) + '\n');

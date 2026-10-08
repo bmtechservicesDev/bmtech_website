@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build && node scripts/prerender.mjs",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "test:seo": "node --test tests/seo.test.mjs",
+    "test": "npm run test:seo && playwright test",
+    "verify:routes": "node scripts/verify-routes.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
