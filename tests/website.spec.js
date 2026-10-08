@@ -209,7 +209,7 @@ test('Mega menu cards fit desktop and mobile viewports', async ({ page }, testIn
   }
 });
 
-test('Portfolio enquiries retain the chosen offering and the appropriate request type', async ({ page }) => {
+test('Direct enquiry URLs retain the chosen offering and request type', async ({ page }) => {
   const offerings = [
     ['Restaurant Solution', 'Product demo'], ['Clinic Automation', 'Product demo'],
     ['My School', 'Product demo'], ['IoT Gateway', 'Product demo'],
@@ -218,21 +218,19 @@ test('Portfolio enquiries retain the chosen offering and the appropriate request
     ['Domain Training & Education', 'Training & education']
   ];
   for (const [offering, type] of offerings) {
-    await page.goto('/products/');
-    await page.getByRole('link', { name: `Request details for ${offering}`, exact: true }).click();
+    await page.goto('/contact/?type='+encodeURIComponent(type)+'&service='+encodeURIComponent(offering));
     await expect(page.locator('[name="interest"]')).toHaveValue(offering);
     await expect(page.locator('[name="type"]')).toHaveValue(type);
     await expect(page.locator('#enquiry-form')).toBeInViewport();
   }
 });
 
-test('CRM and marketing services open a contextual enquiry', async ({ page }) => {
+test('CRM and marketing enquiry parameters remain supported', async ({ page }) => {
   for (const [title, interest, type] of [
     ['CRM & business automation', 'CRM & business automation', 'Custom development'],
     ['Digital marketing', 'Digital Marketing & Solutions', 'Website & marketing']
   ]) {
-    await page.goto('/services/');
-    await page.getByRole('link', { name: `Enquire about this service ${title}`, exact: true }).click();
+    await page.goto('/contact/?type='+encodeURIComponent(type)+'&service='+encodeURIComponent(interest));
     await expect(page.locator('[name="interest"]')).toHaveValue(interest);
     await expect(page.locator('[name="type"]')).toHaveValue(type);
   }
@@ -309,5 +307,15 @@ test('Dropdowns start with cards without an Explore row', async ({page},testInfo
     await expect(panel.locator('.mega-card').first()).toBeVisible();
     expect(await panel.evaluate(el=>el.firstElementChild.classList.contains('mega-card'))).toBe(true);
     await page.screenshot({path:testInfo.outputPath(label.toLowerCase()+'-compact-dropdown.png'),fullPage:false});
+  }
+});
+
+test('Repeated card enquiry actions are removed on every page', async ({page}) => {
+  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/']) {
+    await page.goto(route);
+    await expect(page.locator('.card-action')).toHaveCount(0);
+    await expect(page.getByRole('link', {name:/Request details|Enquire about this solution|Enquire about this service/})).toHaveCount(0);
+    await expect(page.locator('.nav-cta')).toHaveCount(1);
+    await expect(page.locator('.nav-cta')).toHaveAttribute('href','/contact/?type=Product%20demo');
   }
 });
