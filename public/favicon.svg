@@ -1,1 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#071b2c"/><path d="M14 44V20h14c8 0 11 9 5 12 8 3 5 12-4 12H14zm8-15h5c4 0 4-4 0-4h-5v4zm0 10h6c4 0 4-5 0-5h-6v5z" fill="#eff7f6"/><path d="M38 44V20h7l8 13V20h7v24h-7l-8-13v13z" fill="#80e2cb"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>AMPIGEN</title>
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#00b9ef"/><stop offset="1" stop-color="#073365"/>
+    </linearGradient>
+    <linearGradient id="b" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#073365"/><stop offset="1" stop-color="#007cbd"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#fff"/>
+  <ellipse cx="32" cy="35" rx="27" ry="10" transform="rotate(-25 32 35)" fill="none" stroke="#8de4f7" stroke-width="2.5"/>
+  <path d="M8 53 27 12Q30 6 34 12L41 28 31 33 29 26 18 51Z" fill="url(#a)"/>
+  <path d="M29 12Q33 6 37 14L55 53H43L29 22Q27 17 29 12Z" fill="url(#b)"/>
+  <path d="M8 45Q27 47 48 27" fill="none" stroke="#fff" stroke-width="6"/>
+  <path d="M8 45Q27 47 48 27" fill="none" stroke="#00b9ef" stroke-width="3"/>
+  <circle cx="8" cy="45" r="3.3" fill="#59dff2" stroke="#fff" stroke-width="1.2"/>
+  <circle cx="40" cy="34" r="4.5" fill="#00b9ef" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="53" cy="20" r="3.2" fill="#ff9300"/>
+</svg>

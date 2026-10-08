@@ -14,7 +14,7 @@ const familyExamples = {
 };
 
 function portfolioMap() {
-  return '<div class="portfolio-map"><div class="map-heading"><span class="map-status" aria-hidden="true"></span><span>THE BMTECH PORTFOLIO</span><span class="map-caption">Built around your business</span></div>' +
+  return '<div class="portfolio-map"><div class="map-heading"><span class="map-status" aria-hidden="true"></span><span>THE AMPIGEN PORTFOLIO</span><span class="map-caption">Built around your business</span></div>' +
     '<div class="map-families">' + productFamilies.map((family, i) => '<a href="' + family.path + '" class="map-family map-family-' + family.id + '" aria-label="' + escape(family.title) + '"><span class="map-icon">' + icon(family.id) + '</span><span><small>' + String(i + 1).padStart(2, '0') + '</small><strong>' + escape(family.id === 'embedded-systems' ? 'Smart & Embedded' : family.id === 'hr' ? 'HR & Workforce' : family.navLabel) + '</strong></span>' + icon('arrow') + '</a>').join('') +
     '</div><div class="map-connection" aria-hidden="true"><span></span><span></span><span></span></div><div class="map-foundation">' + icon('layers') + '<div><strong>Connected by engineering</strong><span>Custom development · Integration · Support</span></div></div><p class="map-footnote">Web & mobile <span>•</span> Cloud applications <span>•</span> Connected devices</p></div>';
 }
@@ -24,15 +24,15 @@ function homeFamilies() {
 }
 
 const home = {
-  title: 'Business Software & Digital Solutions | BM Tech Services',
-  description: 'Explore BMTech software for hospitality, healthcare, education and HR, plus embedded systems, custom development and end-to-end digital solutions.',
-  html: '<section class="hero"><div class="hero-aura" aria-hidden="true"></div><div class="container hero-layout"><div class="hero-copy">' + eyebrow('BM TECH SERVICES') +
+  title: 'Business Software & Digital Solutions | AMPIGEN',
+  description: 'Explore AMPIGEN software for hospitality, healthcare, education and HR, plus embedded systems, custom development and end-to-end digital solutions.',
+  html: '<section class="hero"><div class="hero-aura" aria-hidden="true"></div><div class="container hero-layout"><div class="hero-copy">' + eyebrow('AMPIGEN') +
     '<h1>Industry software.<br><span>End-to-end<br class="hero-break"> digital solutions.</span></h1><p>Software for your industry. Engineering for your business. We bring products, custom development and connected systems together—from the first requirement to everyday use.</p>' +
     '<div class="hero-signature"><span></span>Engineering Intelligence | Transforming Business</div></div>' + portfolioMap() +
     '</div><div class="container hero-capabilities"><span>Industry software</span><span>Custom engineering</span><span>Implementation & support</span></div></section>' +
     '<section class="section portfolio-home"><div class="container"><div class="section-intro-row">' + sectionHead('OUR PRODUCTS', 'A portfolio built for real operations.', 'Find software for your industry and smart systems for the spaces, people and equipment around it.') + link('/products/', 'Browse the product portfolio', 'text-link section-link') + '</div>' + homeFamilies() + '</div></section>' +
     '<section class="section section-soft"><div class="container"><div class="split-layout"><div>' + sectionHead('END-TO-END DIGITAL DELIVERY', 'The product is a starting point.', '') +
-    '<p class="lead-copy">The complete solution connects your software, people and processes.</p></div><div class="delivery-intro"><p>Start with a BMTech product, build a new application or improve the systems you already use. Our engineering services connect each requirement to a practical delivery plan.</p>' +
+    '<p class="lead-copy">The complete solution connects your software, people and processes.</p></div><div class="delivery-intro"><p>Start with an AMPIGEN product, build a new application or improve the systems you already use. Our engineering services connect each requirement to a practical delivery plan.</p>' +
     relatedLinks([{ href: '/solutions/', label: 'Business solutions' }, { href: '/services/', label: 'Delivery capabilities' }]) + '</div></div>' +
     '<div class="delivery-grid"><article class="delivery-card"><span class="icon-badge">' + icon('code') + '</span><span class="small-label">BUILD</span><h3>Software shaped around your business</h3><p>Custom web, mobile and desktop applications, with user experience and engineering aligned to the work your teams do.</p>' + link('/services/#service-02', 'Custom software development') + '</article>' +
     '<article class="delivery-card"><span class="icon-badge">' + icon('link') + '</span><span class="small-label">CONNECT</span><h3>Systems that work together</h3><p>Application, cloud and device integration, with information flows planned around your operating environment.</p>' + link('/services/#service-06', 'System integration') + '</article>' +

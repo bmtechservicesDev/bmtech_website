@@ -90,7 +90,7 @@ export function renderSeoMetadata(route, page, config) {
     `<meta name="description" content="${escapeHtml(page.description)}" />`,
     `<meta name="robots" content="${config.indexable ? 'index, follow' : 'noindex, follow'}" />`,
     '<meta property="og:type" content="website" />',
-    '<meta property="og:site_name" content="BM Tech Services" />',
+    '<meta property="og:site_name" content="AMPIGEN" />',
     `<meta property="og:title" content="${escapeHtml(page.title)}" />`,
     `<meta property="og:description" content="${escapeHtml(page.description)}" />`,
     `<meta name="twitter:card" content="${config.siteUrl ? 'summary_large_image' : 'summary'}" />`,
@@ -100,22 +100,25 @@ export function renderSeoMetadata(route, page, config) {
 
   if (config.siteUrl) {
     const canonical = new URL(route, config.siteUrl).href;
-    const image = new URL('/brand/social-preview.jpg', config.siteUrl).href;
+    const image = new URL('/brand/ampigen-logo.png', config.siteUrl).href;
     tags.push(
       `<link rel="canonical" href="${escapeHtml(canonical)}" />`,
       `<meta property="og:url" content="${escapeHtml(canonical)}" />`,
       `<meta property="og:image" content="${escapeHtml(image)}" />`,
-      '<meta property="og:image:alt" content="BM Tech Services" />',
+      '<meta property="og:image:type" content="image/png" />',
+      '<meta property="og:image:width" content="1672" />',
+      '<meta property="og:image:height" content="941" />',
+      '<meta property="og:image:alt" content="AMPIGEN" />',
       `<meta name="twitter:image" content="${escapeHtml(image)}" />`,
-      '<meta name="twitter:image:alt" content="BM Tech Services" />'
+      '<meta name="twitter:image:alt" content="AMPIGEN" />'
     );
 
     const graph = [{
       '@type': 'Organization',
       '@id': `${config.siteUrl}/#organization`,
-      name: 'BM Tech Services',
+      name: 'AMPIGEN',
       url: `${config.siteUrl}/`,
-      logo: new URL('/brand/bmtech-logo.webp', config.siteUrl).href
+      logo: new URL('/brand/ampigen-logo.png', config.siteUrl).href
     }];
     const breadcrumbs = getBreadcrumbs(route);
     if (breadcrumbs.length > 1) {

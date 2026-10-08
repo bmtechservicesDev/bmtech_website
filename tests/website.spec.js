@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { createHash } from 'node:crypto';
 
 const routes = [
   '/', '/services/', '/solutions/', '/about/', '/contact/', '/book-a-demo/',
@@ -41,6 +42,122 @@ for (const width of [320, 375, 480, 768, 1024, 1280, 1440, 1920]) {
     expect(errors).toEqual([]);
   });
 }
+
+test('AMPIGEN identity and supplied logo assets are consistent across every route', async ({ page, request }) => {
+  const original = await request.get('/brand/ampigen-logo.png');
+  expect(original.status()).toBe(200);
+  expect(original.headers()['content-type']).toContain('image/png');
+  // Independent fingerprint of the supplied Ampigen3.png: the source artwork stays intact.
+  expect(createHash('sha256').update(await original.body()).digest('hex'))
+    .toBe('9fa0667bf6260d26c311c4ca9965eccebdc3f8f4bf87bf34a8ace2fe10d0040a');
+
+  for (const route of routes) {
+    await page.goto(route);
+    await expect(page).toHaveTitle(/AMPIGEN/);
+    await expect(page.locator('body')).not.toContainText(/\bBM\s*Tech(?:\s+Services)?\b/i);
+    await expect(page.locator('footer')).toContainText('AMPIGEN. All rights reserved.');
+    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', 'AMPIGEN');
+    for (const selector of ['meta[property="og:title"]', 'meta[name="twitter:title"]']) {
+      await expect(page.locator(selector)).toHaveAttribute('content', await page.title());
+    }
+    const descriptions = await page.locator('meta[name="description"], meta[property="og:description"], meta[name="twitter:description"]')
+      .evaluateAll(nodes => nodes.map(node => node.content).join('\n'));
+    expect(descriptions, route).not.toMatch(/\bBM\s*Tech(?:\s+Services)?\b/i);
+
+    const brands = page.locator('.site-header .brand, footer .brand');
+    await expect(brands).toHaveCount(2);
+    for (const brand of await brands.all()) {
+      await expect(brand).toHaveAttribute('href', '/');
+      await expect(brand).toHaveAttribute('aria-label', 'AMPIGEN home');
+      const logo = brand.locator('img');
+      await expect(logo).toHaveAttribute('src', '/brand/ampigen-logo.webp');
+      await expect(logo).toHaveAttribute('alt', 'AMPIGEN — Engineering Intelligence | Transforming Business');
+      await logo.evaluate(image => image.decode());
+      expect(await logo.evaluate(image => [image.naturalWidth, image.naturalHeight])).toEqual([1672, 941]);
+    }
+  }
+});
+
+test('Responsive logo placement preserves the orbit, wordmark and tagline without distortion', async ({ page }) => {
+  for (const width of [320, 375, 480, 768, 1024, 1101, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    for (const brand of await page.locator('.site-header .brand, footer .brand').all()) {
+      await brand.locator('img').evaluate(image => image.decode());
+      const placement = await brand.evaluate(container => {
+        const image = container.querySelector('img');
+        const frame = container.getBoundingClientRect();
+        const rendered = image.getBoundingClientRect();
+        // Measured artwork bounds in the original 1672×941 raster.
+        return {
+          frame: { left: frame.left, top: frame.top, right: frame.right, bottom: frame.bottom, width: frame.width, height: frame.height },
+          artwork: {
+            left: rendered.left + 107 / 1672 * rendered.width,
+            top: rendered.top + 266 / 941 * rendered.height,
+            right: rendered.left + 1544 / 1672 * rendered.width,
+            bottom: rendered.top + 592 / 941 * rendered.height
+          },
+          imageRatio: rendered.width / rendered.height
+        };
+      });
+      expect(placement.imageRatio, `${width}px raster proportions`).toBeCloseTo(1672 / 941, 2);
+      expect(placement.frame.width / placement.frame.height, `${width}px placement proportions`).toBeGreaterThan(4);
+      expect(placement.frame.width / placement.frame.height).toBeLessThan(4.3);
+      expect(placement.artwork.left).toBeGreaterThanOrEqual(placement.frame.left - 1);
+      expect(placement.artwork.top).toBeGreaterThanOrEqual(placement.frame.top - 1);
+      expect(placement.artwork.right).toBeLessThanOrEqual(placement.frame.right + 1);
+      expect(placement.artwork.bottom).toBeLessThanOrEqual(placement.frame.bottom + 1);
+      expect(placement.frame.left).toBeGreaterThanOrEqual(0);
+      expect(placement.frame.right).toBeLessThanOrEqual(width + 1);
+    }
+    const logo = await page.locator('.site-header .brand').boundingBox();
+    const control = await page.locator(width < 1101 ? '.menu-toggle' : '.dropdown-toggle').first().boundingBox();
+    expect(logo.x + logo.width + 8, `${width}px header spacing`).toBeLessThanOrEqual(control.x);
+  }
+});
+
+test('Rebranded action and navigation text retain readable contrast and keyboard focus', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  const contrast = locator => locator.evaluate(element => {
+    const rgba = value => {
+      const values = value.match(/[\d.]+/g).map(Number);
+      return [values[0], values[1], values[2], values[3] ?? 1];
+    };
+    const luminance = rgb => rgb.slice(0, 3).map(value => {
+      const channel = value / 255;
+      return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+    }).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
+    const ancestors = [];
+    for (let node = element; node; node = node.parentElement) ancestors.unshift(node);
+    let background = [255, 255, 255];
+    for (const node of ancestors) {
+      const layer = rgba(getComputedStyle(node).backgroundColor);
+      background = background.map((value, index) => layer[index] * layer[3] + value * (1 - layer[3]));
+    }
+    const ink = luminance(rgba(getComputedStyle(element).color));
+    const surface = luminance(background);
+    return (Math.max(ink, surface) + .05) / (Math.min(ink, surface) + .05);
+  });
+  const demo = page.locator('.nav-cta');
+  for (const selector of ['.nav-cta', '.dropdown-toggle', 'footer .footer-link']) {
+    expect(await contrast(page.locator(selector).first()), selector).toBeGreaterThanOrEqual(4.5);
+  }
+  await demo.hover();
+  expect(await contrast(demo), 'Hovered demo action').toBeGreaterThanOrEqual(4.5);
+  await page.locator('.dropdown-toggle').last().focus();
+  await page.keyboard.press('Tab');
+  await expect(demo).toBeFocused();
+  const focus = await demo.evaluate(element => ({
+    width: parseFloat(getComputedStyle(element).outlineWidth),
+    style: getComputedStyle(element).outlineStyle
+  }));
+  expect(focus.width).toBeGreaterThanOrEqual(2);
+  expect(focus.style).not.toBe('none');
+  const bounds = await demo.boundingBox();
+  expect(bounds.width).toBeGreaterThanOrEqual(44);
+  expect(bounds.height).toBeGreaterThanOrEqual(44);
+});
 
 test('Mobile menu allows navigation', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -204,7 +321,7 @@ test('Mega menu cards fit desktop and mobile viewports', async ({ page }, testIn
 
 test('Company profile is a real downloadable PDF reachable through resources', async ({ page, request }) => {
   await page.goto('/resources/');
-  const download = page.locator('main a[href="/documents/bm-tech-services-company-profile.pdf"]');
+  const download = page.locator('main a[href="/documents/ampigen-company-profile.pdf"]');
   await expect(download).toBeVisible();
   const response = await request.get(await download.getAttribute('href'));
   expect(response.status()).toBe(200);
@@ -322,12 +439,13 @@ test('Header opens dedicated demo and product selection stays meaningful', async
   await expect(page.locator('#form-result')).toBeVisible();
   const draft = new URL(await page.locator('#email-brief').getAttribute('href'));
   expect(draft.searchParams.get('subject')).toBe('Demo request — My School');
+  expect(draft.searchParams.get('body')).toMatch(/^AMPIGEN — Demo Request\n/);
   expect(draft.searchParams.get('body')).toContain('Name: Demo User');
   expect(draft.searchParams.get('body')).toContain('Company: Example School');
 });
 test('Contact validates names email and consent and prepares accurate draft', async ({page}) => {
   await page.goto('/contact/');
-  await expect(page.getByRole('heading',{name:'Contact BM Tech Services',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Contact AMPIGEN',exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Prepare enquiry',exact:true}).click();
   await expect(page.locator('[name="firstName"]')).toBeFocused();
   await expect(page.locator('#consent-error')).toBeVisible();
@@ -341,6 +459,7 @@ test('Contact validates names email and consent and prepares accurate draft', as
   await page.locator('[name="message"]').fill('Ordering & billing enquiry.');
   await page.getByRole('button',{name:'Prepare enquiry',exact:true}).click();
   const draft = new URL(await page.locator('#email-brief').getAttribute('href'));
+  expect(draft.searchParams.get('body')).toMatch(/^AMPIGEN — Enquiry\n/);
   expect(draft.searchParams.get('body')).toContain('Test & User');
   expect(draft.searchParams.get('body')).toContain('Ordering & billing enquiry.');
   const whatsapp = new URL(await page.locator('#whatsapp-brief').getAttribute('href'));

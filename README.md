@@ -1,8 +1,8 @@
-# BM Tech Services website
+# AMPIGEN website
 
-BM Tech Services is an end-to-end digital solution provider. The website presents industry software, smart and embedded systems, and the engineering services that connect them. It is a lightweight Vite multi-page static site with plain JavaScript and CSS, with no runtime framework or submission backend.
+AMPIGEN is an end-to-end digital solution provider. The website presents industry software, smart and embedded systems, and the engineering services that connect them. It is a lightweight Vite multi-page static site with plain JavaScript and CSS, with no runtime framework or submission backend.
 
-The frontend rebuild on `feat/bmtech-website-rebuild-20261008` starts from commit `2db9a1d`. It replaces the page markup, shared UI, CSS and browser interaction modules while carrying forward the approved content, 14 routes, SEO configuration, company profile and Firebase Hosting setup. See [Website rebuild](docs/WEBSITE-REBUILD.md) for the architecture, review scope and stacked-PR merge sequence.
+The AMPIGEN brand refresh on `feat/ampigen-brand-refresh-20261008` starts from merged main commit `36399e8b3fd542b1b1d427f3bffcb58351460bf9`. It applies the supplied AMPIGEN identity to the website and company profile while retaining the approved portfolio, 14 routes, interactions and existing Firebase Hosting project. See [AMPIGEN rebrand](docs/AMPIGEN-REBRAND.md) for the brand scope, preserved technical identifiers and release checks. [Website rebuild](docs/WEBSITE-REBUILD.md) records the preceding frontend architecture work.
 
 ## Local development
 
@@ -60,13 +60,13 @@ The product catalogue uses progressive enhancement: the initial HTML contains al
 | `scripts/prerender.mjs` | Static HTML rendering, robots/sitemap output and build provenance |
 | `scripts/verify-routes.mjs` | Checks that every built route contains distinct metadata and meaningful content |
 | `scripts/generate-company-profile.py` | Reproducible company profile generated from the shared content catalogue |
-| `public/documents/bm-tech-services-company-profile.pdf` | Publicly linked company profile |
+| `public/documents/ampigen-company-profile.pdf` | Publicly linked six-page AMPIGEN company profile |
 
-The approved company name is **BM Tech Services**, with **BMTech** as the short form. Shared brand copy uses **Engineering Intelligence | Transforming Business** and **AI • Cloud • IoT • Automation • Digital Transformation**. Approved logo derivatives are in `public/brand/`; the artwork is preserved. Fonts use the system stack and no external font request is required.
+The public-facing brand is **AMPIGEN**. Shared brand copy uses **Engineering Intelligence | Transforming Business** and **AI • Cloud • IoT • Automation • Digital Transformation**. The supplied original PNG is preserved at `public/brand/ampigen-logo.png`; brand assets are in `public/brand/`. The company-profile generator embeds that original image without distortion and uses a PDF clipping viewport around the artwork to remove its outer white placement margins. Fonts use the system stack and no external font request is required. The private npm package label is `ampigen-website`.
 
 Edit approved offering copy in `src/content.js`; edit page structure in the appropriate `src/pages/` module or the home page in `src/site.js`. Shared UI changes belong in `src/components.js`, presentation in `src/styles.css` and browser interactions in their dedicated controller. Keep existing route and fragment destinations when reorganising content.
 
-For the content rationale, scope decisions and remaining owner inputs, see [SEO and industry implementation](docs/SEO-INDUSTRY-IMPLEMENTATION.md). The [Website rebuild](docs/WEBSITE-REBUILD.md) describes the current frontend architecture. Earlier [UI/UX](docs/UI-UX-REVIEW.md), [brand enhancement](docs/BRAND-UX-ENHANCEMENT.md) and [market-readiness](docs/MARKET-READINESS-REVIEW.md) reviews are historical records; their route counts and editor instructions may describe earlier versions.
+For the content rationale, scope decisions and remaining owner inputs, see [SEO and industry implementation](docs/SEO-INDUSTRY-IMPLEMENTATION.md). The [Website rebuild](docs/WEBSITE-REBUILD.md) describes the current frontend architecture. These and the earlier [UI/UX](docs/UI-UX-REVIEW.md), [brand enhancement](docs/BRAND-UX-ENHANCEMENT.md) and [market-readiness](docs/MARKET-READINESS-REVIEW.md) reviews are historical records. They retain the brand names, route counts and source references that applied when written; the [AMPIGEN rebrand](docs/AMPIGEN-REBRAND.md) documents the current identity.
 
 ## SEO environment
 
@@ -95,7 +95,7 @@ The forms validate inputs locally and **prepare a draft**. They do not submit to
 
 Both forms offer the shared product/service choices. Demo requests require a selection; general enquiries allow an optional selection. Query parameters are allowlisted. Editing a source field hides a stale prepared draft. The visitor can open an email draft, prepare a WhatsApp message or copy the enquiry, and must complete sending in the chosen application.
 
-Draft destinations are held in the `contact` object in `src/pages/enquiry.js` and imported by `src/enquiry-controller.js`. The contact and choice exports are also re-exported by `src/site.js` for compatibility. They are not presented as public contact-detail blocks. No visitor database, automated email delivery or live AI service is introduced. If server-side delivery is implemented later, use a secure endpoint and appropriate privacy information. Never put API secrets in frontend code.
+Draft destinations are held in the `contact` object in `src/pages/enquiry.js` and imported by `src/enquiry-controller.js`. The contact and choice exports are also re-exported by `src/site.js` for compatibility. The brand refresh retains the existing email and WhatsApp destinations; replacement endpoints have not been supplied. They are not presented as public contact-detail blocks. No visitor database, automated email delivery or live AI service is introduced. If server-side delivery is implemented later, use a secure endpoint and appropriate privacy information. Never put API secrets in frontend code.
 
 ## Verification
 
@@ -107,7 +107,7 @@ npx playwright install chromium
 npm test
 ```
 
-The Node tests cover SEO configuration validation, metadata replacement, URL escaping, sitemap output and structured data. The route verifier checks all 14 built pages. Playwright covers responsive pages at 320, 375, 480, 768, 1024, 1280, 1440 and 1920 pixels, navigation, local link destinations, the portfolio, legacy anchors and enquiry interactions. Rebuild review also needs product search/filter, JavaScript-disabled catalogue and screenshot checks. See the pull request and its workflow run for results; the commands listed here do not establish that a particular commit has passed.
+The 10 Node tests cover SEO configuration validation, metadata replacement, URL escaping, sitemap output, structured data and cross-route AMPIGEN identity. The route verifier checks all 14 built pages. The 38 Playwright cases cover responsive pages at 320, 375, 480, 768, 1024, 1280, 1440 and 1920 pixels, navigation, local link destinations, the portfolio, legacy anchors and enquiry interactions. They also verify the original logo fingerprint, responsive artwork placement, action text contrast, keyboard focus, product search/filter and the JavaScript-disabled catalogue. The suite produces 121 screenshots for visual review. See the pull request and its workflow run for results; the commands listed here do not establish that a particular commit has passed.
 
 GitHub Actions runs on pull requests and pushes to `main`, builds the website, runs these checks and uploads the `website-browser-review` screenshot artifact. The workflow does not deploy. A feature-branch push alone does not trigger this workflow; a draft pull request can run the same review checks.
 
@@ -117,11 +117,11 @@ To regenerate the company profile with Node.js, Python, ReportLab and Pillow ins
 python3 scripts/generate-company-profile.py
 ```
 
-Render and visually review all PDF pages after changing the generator or catalogue before replacing the public asset. Keep intermediate renders outside the repository.
+The generator writes `public/documents/ampigen-company-profile.pdf` and enforces six pages and the expected 20-entry portfolio. Render and visually review all PDF pages after changing the generator or catalogue before replacing the public asset. The previous BM Tech Services PDF is removed; Firebase redirects its old URL to the AMPIGEN download with a 301 response after deployment. Local static previews do not emulate that Hosting rule. Keep intermediate renders outside the repository.
 
 ## Hosting and release
 
-The existing Firebase Hosting target is `bmtech-website` (project number `74431502417`). It hosts static files only. Route directories and trailing slashes are preserved, there is no SPA catch-all rewrite, and hashed assets have immutable caching. The predeploy hook builds fresh output. Do not run `firebase init hosting` over the existing configuration.
+The existing Firebase Hosting target remains `bmtech-website` (project number `74431502417`). This is an infrastructure identifier, not the public brand name. The GitHub repository remains `bmtechservicesDev/bmtech_website`; neither service is renamed by the brand refresh. Firebase hosts static files only. Route directories and trailing slashes are preserved, there is no SPA catch-all rewrite, and hashed assets have immutable caching. The predeploy hook builds fresh output. Do not run `firebase init hosting` over the existing configuration.
 
 Deployment is a separate requested action. For a later authorised review-channel update from a configured Firebase CLI session:
 

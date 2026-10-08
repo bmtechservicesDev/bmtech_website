@@ -7,7 +7,8 @@ Usage:
 
 Requires Python 3, reportlab, Pillow and Node.js. Node imports src/content.js;
 no application build or network access is needed. The supplied logo is embedded
-at its original aspect ratio without alteration. All layout measurements are
+at its original aspect ratio without alteration. A PDF clipping viewport removes
+the supplied PNG's outer white placement margins. All layout measurements are
 checked before the PDF replaces the existing asset.
 
 CODEX_PRIMARY_RUNTIME_NODE and CODEX_PRIMARY_RUNTIME_ROOT are supported when
@@ -40,16 +41,17 @@ from reportlab.platypus import Paragraph
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "public/documents/bm-tech-services-company-profile.pdf"
+OUTPUT = ROOT / "public/documents/ampigen-company-profile.pdf"
 PAGE_WIDTH, PAGE_HEIGHT = letter
 MARGIN = 44
 CONTENT_WIDTH = PAGE_WIDTH - 2 * MARGIN
 CONTENT_BOTTOM = PAGE_HEIGHT - 58
 PAGE_COUNT = 6
 
-NAVY = colors.HexColor("#071B2C")
-DEEP_BLUE = colors.HexColor("#14364C")
-CYAN = colors.HexColor("#00A9DB")
+NAVY = colors.HexColor("#073365")
+DEEP_BLUE = colors.HexColor("#006DAD")
+CYAN = colors.HexColor("#00B9EF")
+CYAN_INK = colors.HexColor("#007295")
 INK = colors.HexColor("#203746")
 MUTED = colors.HexColor("#536B7A")
 PALE = colors.HexColor("#F0F6FA")
@@ -118,13 +120,13 @@ def register_fonts(font_dir: Path | None) -> str:
     ])
     for regular, bold in choices:
         if regular.is_file() and bold.is_file():
-            pdfmetrics.registerFont(TTFont("BMTech", str(regular)))
-            pdfmetrics.registerFont(TTFont("BMTech-Bold", str(bold)))
+            pdfmetrics.registerFont(TTFont("AMPIGEN", str(regular)))
+            pdfmetrics.registerFont(TTFont("AMPIGEN-Bold", str(bold)))
             return str(regular.parent)
     if font_dir:
         raise RuntimeError("The supplied font directory does not contain the required NotoSans fonts")
-    pdfmetrics.registerFont(pdfmetrics.Font("BMTech", "Helvetica", "WinAnsiEncoding"))
-    pdfmetrics.registerFont(pdfmetrics.Font("BMTech-Bold", "Helvetica-Bold", "WinAnsiEncoding"))
+    pdfmetrics.registerFont(pdfmetrics.Font("AMPIGEN", "Helvetica", "WinAnsiEncoding"))
+    pdfmetrics.registerFont(pdfmetrics.Font("AMPIGEN-Bold", "Helvetica-Bold", "WinAnsiEncoding"))
     return "PDF standard Helvetica fonts"
 
 
@@ -139,16 +141,16 @@ class Profile:
         self.pdf = canvas.Canvas(
             self.buffer, pagesize=letter, pageCompression=1, invariant=1,
         )
-        self.pdf.setTitle("BM Tech Services Company Profile")
-        self.pdf.setAuthor("BM Tech Services")
+        self.pdf.setTitle("AMPIGEN Company Profile")
+        self.pdf.setAuthor("AMPIGEN")
         self.pdf.setSubject("Industry software, connected systems and end-to-end digital services")
-        self.pdf.setCreator("BM Tech Services company profile generator")
+        self.pdf.setCreator("AMPIGEN company profile generator")
         self.page_number = 0
         self.page_bottoms: dict[int, float] = {}
 
     def paragraph(self, text, width, size=10.5, leading=None, bold=False, color=INK):
         style = ParagraphStyle(
-            "profile", fontName="BMTech-Bold" if bold else "BMTech",
+            "profile", fontName="AMPIGEN-Bold" if bold else "AMPIGEN",
             fontSize=size, leading=leading or size * 1.38,
             textColor=color, spaceBefore=0, spaceAfter=0,
             splitLongWords=False, allowWidows=0, allowOrphans=0,
@@ -187,8 +189,8 @@ class Profile:
         self.pdf.setLineWidth(0.6)
         self.pdf.line(MARGIN, 43, PAGE_WIDTH - MARGIN, 43)
         self.pdf.setFillColor(MUTED)
-        self.pdf.setFont("BMTech", 7.8)
-        self.pdf.drawString(MARGIN, 27, "BM TECH SERVICES")
+        self.pdf.setFont("AMPIGEN", 7.8)
+        self.pdf.drawString(MARGIN, 27, "AMPIGEN")
         self.pdf.drawRightString(
             PAGE_WIDTH - MARGIN, 27,
             f"COMPANY PROFILE  |  {self.page_number:02d} / {PAGE_COUNT:02d}",
@@ -202,10 +204,10 @@ class Profile:
         if title is None:
             return MARGIN
         self.pdf.setFillColor(DEEP_BLUE)
-        self.pdf.setFont("BMTech-Bold", 8.6)
-        self.pdf.drawString(MARGIN, PAGE_HEIGHT - 36, "BM TECH SERVICES")
+        self.pdf.setFont("AMPIGEN-Bold", 8.6)
+        self.pdf.drawString(MARGIN, PAGE_HEIGHT - 36, "AMPIGEN")
         self.pdf.setFillColor(MUTED)
-        self.pdf.setFont("BMTech", 8.0)
+        self.pdf.setFont("AMPIGEN", 8.0)
         self.pdf.drawRightString(PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 36, "COMPANY PROFILE")
         self.pdf.setFillColor(CYAN)
         self.pdf.rect(MARGIN, PAGE_HEIGHT - 49, 34, 2, fill=1, stroke=0)
@@ -216,20 +218,32 @@ class Profile:
 
     def cover(self):
         self.page()
-        logo_path = ROOT / "public/brand/bmtech-logo.webp"
+        logo_path = ROOT / "public/brand/ampigen-logo.png"
         with Image.open(logo_path) as logo:
-            logo_height = CONTENT_WIDTH * logo.height / logo.width
+            if logo.size != (1672, 941):
+                raise LayoutError("Review the AMPIGEN logo placement: the source dimensions have changed")
+            # Embed the complete original PNG. Clip only its white placement
+            # margins in the PDF, preserving every part of the supplied artwork.
+            left, crop_top, right, bottom = (90, 245, 1582, 625)
+            scale = CONTENT_WIDTH / (right - left)
+            logo_height = (bottom - crop_top) * scale
+            self.pdf.saveState()
+            viewport = self.pdf.beginPath()
+            viewport.rect(MARGIN, PAGE_HEIGHT - MARGIN - logo_height, CONTENT_WIDTH, logo_height)
+            self.pdf.clipPath(viewport, stroke=0, fill=0)
             self.pdf.drawImage(
-                ImageReader(logo), MARGIN, PAGE_HEIGHT - MARGIN - logo_height,
-                width=CONTENT_WIDTH, height=logo_height, mask="auto",
+                ImageReader(logo), MARGIN - left * scale,
+                PAGE_HEIGHT - MARGIN - (logo.height - crop_top) * scale,
+                width=logo.width * scale, height=logo.height * scale, mask="auto",
             )
+            self.pdf.restoreState()
         top = MARGIN + logo_height + 24
         top = self.text("COMPANY PROFILE", MARGIN, top, CONTENT_WIDTH,
-                        size=9.4, leading=13, bold=True, color=CYAN)
+                        size=9.4, leading=13, bold=True, color=CYAN_INK)
         top = self.text("End-to-end digital\nsolutions for business", MARGIN, top + 10,
                         CONTENT_WIDTH, size=30, leading=36.5, bold=True, color=NAVY)
         top = self.text(
-            "BM Tech Services combines industry software, custom development and connected engineering "
+            "AMPIGEN combines industry software, custom development and connected engineering "
             "to help businesses digitalize their operations. We plan, build, integrate and support "
             "software, devices and cloud systems around your users and business requirements.",
             MARGIN, top + 16, CONTENT_WIDTH, size=11.0, leading=16.0,
@@ -295,7 +309,7 @@ class Profile:
         width = CONTENT_WIDTH - 34
         for index, item in enumerate(self.data["solutions"], 1):
             self.text(f"{index:02d}", MARGIN, top + 1, 25, size=10.4, leading=15,
-                      bold=True, color=CYAN)
+                      bold=True, color=CYAN_INK)
             y = self.text(item["title"], text_x, top, width, size=12.1, leading=16.5,
                           bold=True, color=NAVY)
             y = self.text(item["description"], text_x, y + 5, width, size=10.0, leading=13.8)
@@ -393,7 +407,7 @@ class Profile:
         ]
         for index, (title, body) in enumerate(stages, 1):
             self.text(f"{index:02d}", MARGIN, top + 1, 24, size=10.0, leading=14.2,
-                      bold=True, color=CYAN)
+                      bold=True, color=CYAN_INK)
             y = self.text(title, MARGIN + 34, top, CONTENT_WIDTH - 34,
                           size=11.5, leading=15.5, bold=True, color=NAVY)
             y = self.text(body, MARGIN + 34, y + 4, CONTENT_WIDTH - 34,

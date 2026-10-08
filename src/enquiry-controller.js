@@ -55,7 +55,7 @@ export function initEnquiry() {
       const value = name => String(data.get(name) || '').trim();
       const isDemo = form.dataset.demo === 'true';
       const subject = isDemo ? 'Demo request — ' + value('interest') : 'General enquiry';
-      const brief = `BM Tech Services — ${isDemo ? 'Demo Request' : 'Enquiry'}\n\nName: ${value('firstName')} ${value('lastName')}\nCompany: ${value('company') || 'Not provided'}\nEmail: ${value('email')}\nPhone: ${value('phone') || 'Not provided'}\nProduct or service: ${value('interest') || 'Not specified'}\nEnquiry type: ${isDemo ? 'Product demo' : enquiryType}\n\nMessage:\n${value('message') || 'Not provided'}`;
+      const brief = `AMPIGEN — ${isDemo ? 'Demo Request' : 'Enquiry'}\n\nName: ${value('firstName')} ${value('lastName')}\nCompany: ${value('company') || 'Not provided'}\nEmail: ${value('email')}\nPhone: ${value('phone') || 'Not provided'}\nProduct or service: ${value('interest') || 'Not specified'}\nEnquiry type: ${isDemo ? 'Product demo' : enquiryType}\n\nMessage:\n${value('message') || 'Not provided'}`;
       document.querySelector('#brief-output').value = brief;
       document.querySelector('#email-brief').href = `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(brief)}`;
       document.querySelector('#whatsapp-brief').href = `https://wa.me/${contact.phone.replace(/\D/g, '')}?text=${encodeURIComponent(brief)}`;

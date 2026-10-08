@@ -15,6 +15,11 @@ for (const route of routes) {
   const title = html.match(/<title>([^<]+)<\/title>/)?.[1];
   const description = html.match(/<meta name="description" content="([^"]+)"/)?.[1];
   assert.ok(title && description, `${route}: title and description`);
+  assert.match(title, /\bAMPIGEN\b/, `${route}: AMPIGEN page title`);
+  assert.doesNotMatch(html, /\bBM\s*Tech(?:\s+Services)?\b|bm-tech-services|\/brand\/bmtech-logo\.|\/brand\/social-preview\./i, `${route}: no old branding or asset reference`);
+  if (route === '/resources/') {
+    assert.match(html, /href="\/documents\/ampigen-company-profile\.pdf"/, `${route}: current company profile`);
+  }
   assert.ok(!titles.has(title), `${route}: distinct title`);
   assert.ok(!descriptions.has(description), `${route}: distinct description`);
   titles.add(title);
