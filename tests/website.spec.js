@@ -24,9 +24,10 @@ test('Mobile menu allows navigation', async ({ page }) => {
   const toggle = page.getByRole('button', { name: 'Open navigation' });
   await toggle.click();
   await expect(page.getByRole('button', { name: 'Close navigation' })).toHaveAttribute('aria-expanded', 'true');
-  await page.locator('nav').getByRole('link', { name: 'Products', exact: true }).click();
+  await page.getByRole('button', {name:'Products submenu',exact:true}).click();
+  await page.locator('#submenu-0 .dropdown-overview').click();
   await expect(page).toHaveURL(/\/products\/$/);
-  await expect(page.locator('nav a[aria-current="page"]')).toHaveText('Products');
+  await expect(page.locator('nav button[aria-current="page"]')).toHaveText('Products');
 });
 
 test('Enquiry validates inputs and prepares an accurately encoded email draft', async ({ page }) => {
@@ -68,7 +69,7 @@ test('Mobile menu supports Escape, keyboard focus and outside dismissal', async 
   const toggle = page.locator('.menu-toggle');
   await toggle.click();
   await page.keyboard.press('Tab');
-  await expect(page.locator('nav a').first()).toBeFocused();
+  await expect(page.locator('nav .dropdown-toggle').first()).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -158,7 +159,7 @@ test('Single header demo and screenshot removals', async ({ page }) => {
 test('Every desktop heading opens hover dropdown and supports keyboard dismissal', async ({ page }) => {
   await page.setViewportSize({width:1440,height:900});
   await page.goto('/');
-  for (const name of ['Products','Industries','Solutions','Resources','About','Contact']) {
+  for (const name of ['Products','Industries','Solutions','Resources']) {
     const button = page.getByRole('button', {name: `${name} submenu`, exact:true});
     await button.hover();
     await expect(button).toHaveAttribute('aria-expanded', 'true');
@@ -283,4 +284,17 @@ test('Unknown enquiry parameters keep safe defaults and selection clears its err
   await page.locator('[name="interest"]').selectOption('Queue Management');
   await expect(page.locator('#interest-error')).toBeHidden();
   await expect(page.locator('[name="interest"]')).toHaveAttribute('aria-invalid', 'false');
+});
+
+test('Reference header contains four plain headings and one demo CTA', async ({page}, testInfo) => {
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('/');
+  await expect(page.locator('.nav-heading')).toHaveCount(4);
+  await expect(page.locator('.dropdown-toggle')).toHaveText(['Products','Industries','Solutions','Resources']);
+  await expect(page.locator('.site-nav')).not.toContainText('About');
+  await expect(page.locator('.site-nav')).not.toContainText('Contact');
+  await expect(page.locator('.nav-cta')).toHaveCount(1);
+  await page.getByRole('button',{name:'Products submenu',exact:true}).hover();
+  await expect(page.locator('#submenu-0')).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath('reference-header.png'),fullPage:false});
 });
