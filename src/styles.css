@@ -370,7 +370,7 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #ba3c30;
 .footer-intro > p { color: #b9d0de; font-size: 19px; line-height: 1.7; letter-spacing: -.015em; }
 .footer-columns { display: grid; grid-template-columns: 1fr 1.15fr 1.45fr .9fr .7fr; gap: 34px; }
 .footer-column { min-width: 0; }
-.footer-column h3 { font-size: 13px; line-height: 1.5; font-weight: 600; letter-spacing: 0; color: #e6f1f6; margin-bottom: 18px; }
+.footer-column h3 { display: flex; align-items: center; min-height: 30px; font-size: 13px; line-height: 1.5; font-weight: 600; letter-spacing: 0; color: #e6f1f6; margin-bottom: 18px; }
 .footer-heading-link { color: #e6f1f6; text-decoration: none; display: inline-flex; align-items: center; min-height: 30px; }
 .footer-heading-link:hover { color: #76ddf1; }
 .footer-column ul { list-style: none; display: grid; gap: 3px; }
