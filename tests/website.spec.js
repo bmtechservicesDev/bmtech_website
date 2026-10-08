@@ -67,6 +67,15 @@ test('Mobile menu supports Escape, keyboard focus and outside dismissal', async 
   await toggle.click();
   await page.locator('main').click({position:{x:10,y:650}});
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+  await page.goto('/products/');
+  await toggle.click();
+  await page.locator('.nav-cta').focus();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb', exact: true })
+    .getByRole('link', { name: 'Home', exact: true })).toBeFocused();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#site-nav')).toBeHidden();
 });
 
 test('Local links reach prerendered pages, real fragments and supplied assets', async ({ page, request }) => {

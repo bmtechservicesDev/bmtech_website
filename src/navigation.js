@@ -76,5 +76,9 @@ export function initNavigation() {
     if (!header.contains(event.target)) setNavigation(false);
     else if (!event.target.closest('.nav-item')) closePanels();
   });
+  header.addEventListener('focusout', event => {
+    // Keep the next page control visible when keyboard focus leaves the mobile panel.
+    if (!desktop.matches && event.relatedTarget && !header.contains(event.relatedTarget)) setNavigation(false);
+  });
   desktop.addEventListener('change', () => setNavigation(false));
 }
