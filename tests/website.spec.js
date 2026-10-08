@@ -5,13 +5,13 @@ for (const width of [320, 375, 480, 768, 1024, 1280, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    for (const route of ['/', '/services/', '/solutions/', '/about/', '/contact/', '/products/', '/industries/', '/resources/']) {
+    for (const route of ['/', '/services/', '/solutions/', '/about/', '/contact/', '/book-a-demo/', '/products/', '/industries/', '/resources/']) {
       const response = await page.goto(route);
       expect(response.status()).toBe(200);
       await expect(page.locator('h1')).toBeVisible();
       await expect(page.locator('main')).toHaveCount(1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
-      await expect(page.locator('footer a[href="mailto:bmtechservices2025@gmail.com"]')).toHaveCount(1);
+      await expect(page.locator('footer .footer-contact, footer address, footer a[href^="mailto:"], footer a[href^="tel:"]')).toHaveCount(0);
       await page.screenshot({ path: testInfo.outputPath(`${route.replaceAll('/', '') || 'home'}-${width}.png`), fullPage: true });
     }
     expect(errors).toEqual([]);
@@ -30,39 +30,6 @@ test('Mobile menu allows navigation', async ({ page }) => {
   await expect(page.locator('nav button[aria-current="page"]')).toHaveText('Products');
 });
 
-test('Enquiry validates inputs and prepares an accurately encoded email draft', async ({ page }) => {
-  await page.goto('/contact/');
-  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
-  await expect(page.locator('#form-result')).toBeHidden();
-  await expect(page.locator('#name-error')).toHaveText('Enter your name.');
-  await expect(page.locator('[name="name"]')).toBeFocused();
-  await page.locator('[name="name"]').fill('Test & User');
-  await page.locator('[name="company"]').fill('Example Company');
-  await page.locator('[name="email"]').fill('visitor@example.com');
-  await page.locator('[name="interest"]').selectOption('Cloud & SaaS');
-  await page.locator('[name="message"]').fill('We need an application for ordering & billing.');
-  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
-  const draft = page.getByRole('link', { name: 'Open email draft' });
-  await expect(draft).toBeVisible();
-  const href = new URL(await draft.getAttribute('href'));
-  expect(href.pathname).toBe('bmtechservices2025@gmail.com');
-  expect(href.searchParams.get('subject')).toBe('Project enquiry — Cloud & SaaS');
-  expect(href.searchParams.get('body')).toContain('Test & User');
-  expect(href.searchParams.get('body')).toContain('ordering & billing.');
-  const whatsapp = new URL(await page.getByRole('link', { name: 'Enquire on WhatsApp', exact: false }).getAttribute('href'));
-  expect(whatsapp.origin).toBe('https://wa.me');
-  expect(whatsapp.pathname).toBe('/919642668815');
-  expect(whatsapp.searchParams.get('text')).toBe(href.searchParams.get('body'));
-  await expect(page.locator('#form-result')).toContainText('Your enquiry has not been sent yet.');
-});
-
-
-test('Service enquiry carries the selected capability into the form', async ({ page }) => {
-  await page.goto('/contact/?service=Embedded%20systems%20%26%20IoT');
-  await expect(page.locator('[name="interest"]')).toHaveValue('Embedded systems & IoT');
-  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Contact');
-});
-
 test('Mobile menu supports Escape, keyboard focus and outside dismissal', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto('/');
@@ -78,61 +45,9 @@ test('Mobile menu supports Escape, keyboard focus and outside dismissal', async 
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('Enquiry rejects whitespace and short messages, then clears stale draft', async ({ page }) => {
-  await page.goto('/contact/?service=Cloud%20%26%20SaaS');
-  await page.locator('[name="name"]').fill('   ');
-  await page.locator('[name="email"]').fill('invalid');
-  await page.locator('[name="message"]').fill('Too short');
-  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
-  await expect(page.locator('#name-error')).toBeVisible();
-  await expect(page.locator('#email-error')).toBeVisible();
-  await expect(page.locator('#message-error')).toContainText('at least 20 characters');
-  await page.locator('[name="name"]').fill('Review User');
-  await page.locator('[name="email"]').fill('review@example.com');
-  await page.locator('[name="message"]').fill('We need a cloud application for inventory.');
-  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
-  await expect(page.locator('#result-heading')).toBeFocused();
-  await expect(page.locator('#form-result')).toBeVisible();
-  await page.locator('[name="message"]').fill('We need a cloud application for field teams.');
-  await expect(page.locator('#form-result')).toBeHidden();
-  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
-  await expect(page.locator('#brief-output')).toHaveValue(/field teams/);
-});
-
-test('Copy fallback and reduced motion remain usable', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/contact/');
-  await page.locator('[name="name"]').fill('Review User');
-  await page.locator('[name="email"]').fill('review@example.com');
-  await page.locator('[name="interest"]').selectOption('Cloud & SaaS');
-  await page.locator('[name="message"]').fill('We need a cloud application for inventory.');
-  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
-  await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => { throw new Error('Denied'); } }, configurable: true }));
-  await page.getByRole('button', { name: 'Copy enquiry' }).click();
-  await expect(page.locator('#copy-status')).toHaveText('Select and copy the highlighted text.');
-  await expect(page.locator('#brief-output')).toBeFocused();
-  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
-});
-
-test('Product demo selects product and enquiry type with approved branding', async ({ page }) => {
-  await page.goto('/products/');
-  await expect(page.locator('.brand img').first()).toHaveAttribute('src', '/brand/bmtech-logo.webp');
-  await page.getByRole('link', { name: 'Book a demo', exact: true }).click();
-  await page.locator('[name="interest"]').selectOption('My School');
-  await expect(page.locator('[name="interest"]')).toHaveValue('My School');
-  await expect(page.locator('[name="type"]')).toHaveValue('Product demo');
-  await page.locator('[name="name"]').fill('Demo Review');
-  await page.locator('[name="email"]').fill('demo@example.com');
-  await page.locator('[name="phone"]').fill('+91 90000 00000');
-  await page.locator('[name="message"]').fill('We would like to discuss a demonstration for our school.');
-  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
-  await expect(page.locator('#brief-output')).toHaveValue(/Enquiry type: Product demo/);
-  await expect(page.locator('#brief-output')).toHaveValue(/Phone: \+91 90000 00000/);
-});
-
 test('All local links, supplied brand assets and server rendered routes resolve', async ({ page, request }) => {
   const visited = new Set();
-  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/']) {
+  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/', '/book-a-demo/']) {
     await page.goto(route);
     await expect(page.locator('h1')).toHaveCount(1);
     for (const href of await page.locator('a[href^="/"], img[src^="/"], link[rel="icon"]').evaluateAll(nodes => nodes.map(n=>n.getAttribute('href') || n.getAttribute('src')))) {
@@ -148,7 +63,7 @@ test('All local links, supplied brand assets and server rendered routes resolve'
 
 
 test('Single header demo and screenshot removals', async ({ page }) => {
-  for (const route of ['/', '/products/', '/solutions/', '/industries/', '/services/', '/resources/', '/about/', '/contact/']) {
+  for (const route of ['/', '/products/', '/solutions/', '/industries/', '/services/', '/resources/', '/about/', '/contact/', '/book-a-demo/']) {
     await page.goto(route);
     await expect(page.getByRole('link', { name: 'Book a demo', exact: true })).toHaveCount(1);
     await expect(page.locator('main')).not.toContainText('Discuss your project');
@@ -209,33 +124,6 @@ test('Mega menu cards fit desktop and mobile viewports', async ({ page }, testIn
   }
 });
 
-test('Direct enquiry URLs retain the chosen offering and request type', async ({ page }) => {
-  const offerings = [
-    ['Restaurant Solution', 'Product demo'], ['Clinic Automation', 'Product demo'],
-    ['My School', 'Product demo'], ['IoT Gateway', 'Product demo'],
-    ['Smart LED', 'Product demo'], ['Queue Management', 'Product demo'],
-    ['Website Development & Hosting', 'Website & marketing'],
-    ['Domain Training & Education', 'Training & education']
-  ];
-  for (const [offering, type] of offerings) {
-    await page.goto('/contact/?type='+encodeURIComponent(type)+'&service='+encodeURIComponent(offering));
-    await expect(page.locator('[name="interest"]')).toHaveValue(offering);
-    await expect(page.locator('[name="type"]')).toHaveValue(type);
-    await expect(page.locator('#enquiry-form')).toBeInViewport();
-  }
-});
-
-test('CRM and marketing enquiry parameters remain supported', async ({ page }) => {
-  for (const [title, interest, type] of [
-    ['CRM & business automation', 'CRM & business automation', 'Custom development'],
-    ['Digital marketing', 'Digital Marketing & Solutions', 'Website & marketing']
-  ]) {
-    await page.goto('/contact/?type='+encodeURIComponent(type)+'&service='+encodeURIComponent(interest));
-    await expect(page.locator('[name="interest"]')).toHaveValue(interest);
-    await expect(page.locator('[name="type"]')).toHaveValue(type);
-  }
-});
-
 test('Company profile is a real downloadable PDF reachable through resources', async ({ page, request }) => {
   await page.goto('/resources/');
   const download = page.getByRole('link', { name: 'Download company profile', exact: false });
@@ -270,18 +158,7 @@ test('Tablet navigation supports tap and a compact contact form stays near the t
   await expect(products).toBeFocused();
   await expect(page.locator('#submenu-0')).toBeHidden();
   await page.goto('/contact/');
-  await expect(page.locator('[name="name"]')).toBeInViewport();
-});
-
-test('Unknown enquiry parameters keep safe defaults and selection clears its error', async ({ page }) => {
-  await page.goto('/contact/?service=Unknown&type=Unknown');
-  await expect(page.locator('[name="type"]')).toHaveValue('General enquiry');
-  await expect(page.locator('[name="interest"]')).toHaveValue('');
-  await page.getByRole('button', { name: 'Prepare enquiry' }).click();
-  await expect(page.locator('#interest-error')).toBeVisible();
-  await page.locator('[name="interest"]').selectOption('Queue Management');
-  await expect(page.locator('#interest-error')).toBeHidden();
-  await expect(page.locator('[name="interest"]')).toHaveAttribute('aria-invalid', 'false');
+  await expect(page.locator('[name="firstName"]')).toBeInViewport();
 });
 
 test('Reference header contains four plain headings and one demo CTA', async ({page}, testInfo) => {
@@ -311,21 +188,76 @@ test('Dropdowns start with cards without an Explore row', async ({page},testInfo
 });
 
 test('Repeated card enquiry actions are removed on every page', async ({page}) => {
-  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/']) {
+  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/', '/book-a-demo/']) {
     await page.goto(route);
     await expect(page.locator('.card-action')).toHaveCount(0);
     await expect(page.getByRole('link', {name:/Request details|Enquire about this solution|Enquire about this service/})).toHaveCount(0);
     await expect(page.locator('.nav-cta')).toHaveCount(1);
-    await expect(page.locator('.nav-cta')).toHaveAttribute('href','/contact/?type=Product%20demo');
+    await expect(page.locator('.nav-cta')).toHaveAttribute('href','/book-a-demo/');
   }
 });
 
 test('Shared footer and page links follow the reference cleanup', async ({ page }) => {
-  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/']) {
+  for (const route of ['/', '/products/', '/industries/', '/solutions/', '/services/', '/resources/', '/about/', '/contact/', '/book-a-demo/']) {
     await page.goto(route);
     await expect(page.locator('main .section-end')).toHaveCount(0);
     await expect(page.locator('.offering-card strong')).toHaveCount(0);
     await expect(page.locator('footer .footer-column')).toHaveCount(5);
     await expect(page.locator('footer .button')).toHaveCount(0);
   }
+});
+
+test('Company footer replaces all visible contact blocks', async ({page}) => {
+  for (const route of ['/', '/contact/', '/book-a-demo/']) {
+    await page.goto(route);
+    const company = page.locator('.footer-column').filter({has:page.getByRole('heading',{name:'Company',exact:true})});
+    await expect(company.getByRole('link',{name:'About us',exact:true})).toHaveAttribute('href','/about/');
+    await expect(company.getByRole('link',{name:'Contact us',exact:true})).toHaveAttribute('href','/contact/');
+    await expect(page.locator('main, footer')).not.toContainText('bmtechservices2025@gmail.com');
+    await expect(page.locator('main, footer')).not.toContainText('Janapriya Utopia');
+    await expect(page.locator('main .contact-details')).toHaveCount(0);
+  }
+});
+test('Header opens dedicated demo and product selection stays meaningful', async ({page}) => {
+  await page.goto('/');
+  await page.locator('.nav-cta').click();
+  await expect(page).toHaveURL(/book-a-demo\/$/);
+  await expect(page.getByRole('heading',{name:'Book a Demo',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Book Demo',exact:true}).click();
+  await expect(page.locator('#interest-error')).toBeVisible();
+  await page.locator('[name="interest"]').selectOption('My School');
+  await page.locator('[name="firstName"]').fill('Demo');
+  await page.locator('[name="lastName"]').fill('User');
+  await page.locator('[name="email"]').fill('demo@example.com');
+  await page.locator('[name="company"]').fill('Example School');
+  await page.locator('[name="consent"]').check();
+  await page.getByRole('button',{name:'Book Demo',exact:true}).click();
+  await expect(page.locator('#form-result')).toBeVisible();
+  const draft = new URL(await page.locator('#email-brief').getAttribute('href'));
+  expect(draft.searchParams.get('subject')).toBe('Demo request — My School');
+  expect(draft.searchParams.get('body')).toContain('Name: Demo User');
+  expect(draft.searchParams.get('body')).toContain('Company: Example School');
+});
+test('Contact validates names email and consent and prepares accurate draft', async ({page}) => {
+  await page.goto('/contact/');
+  await page.getByRole('button',{name:'Submit',exact:true}).click();
+  await expect(page.locator('[name="firstName"]')).toBeFocused();
+  await expect(page.locator('#consent-error')).toBeVisible();
+  await page.locator('[name="firstName"]').fill('Test &');
+  await page.locator('[name="lastName"]').fill('User');
+  await page.locator('[name="email"]').fill('invalid');
+  await page.locator('[name="consent"]').check();
+  await page.getByRole('button',{name:'Submit',exact:true}).click();
+  await expect(page.locator('#email-error')).toContainText('valid email');
+  await page.locator('[name="email"]').fill('visitor@example.com');
+  await page.locator('[name="message"]').fill('Ordering & billing enquiry.');
+  await page.getByRole('button',{name:'Submit',exact:true}).click();
+  const draft = new URL(await page.locator('#email-brief').getAttribute('href'));
+  expect(draft.searchParams.get('body')).toContain('Test & User');
+  expect(draft.searchParams.get('body')).toContain('Ordering & billing enquiry.');
+  const whatsapp = new URL(await page.locator('#whatsapp-brief').getAttribute('href'));
+  expect(whatsapp.searchParams.get('text')).toBe(draft.searchParams.get('body'));
+  await expect(page.locator('#form-result')).toContainText('Your enquiry has not been sent yet.');
+  await page.locator('[name="message"]').fill('Changed message');
+  await expect(page.locator('#form-result')).toBeHidden();
 });

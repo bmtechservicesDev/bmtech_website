@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { renderPage } from '../src/main.js';
 
-const routes = ['/', '/services/', '/solutions/', '/about/', '/contact/', '/products/', '/industries/', '/resources/'];
+const routes = ['/', '/services/', '/solutions/', '/about/', '/contact/', '/products/', '/industries/', '/resources/', '/book-a-demo/'];
 const escapeAttribute = value => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
 
 for (const route of routes) {
