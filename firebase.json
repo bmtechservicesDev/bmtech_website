@@ -4,6 +4,13 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "trailingSlash": true,
     "predeploy": ["npm run build"],
+    "redirects": [
+      {
+        "source": "/documents/bm-tech-services-company-profile.pdf",
+        "destination": "/documents/ampigen-company-profile.pdf",
+        "type": 301
+      }
+    ],
     "headers": [
       {
         "source": "/build-info.json",

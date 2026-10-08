@@ -128,9 +128,9 @@ function familyPage(family) {
 
 export const portfolioPages = {
   '/products/': {
-    title: 'Software Products & Smart Systems | BM Tech Services',
-    description: 'Explore BMTech software for hospitality, healthcare, education and HR, plus home automation, queue management, Smart LED and connected systems.',
-    html: `${innerHero('Products', 'Industry Software Products & Smart Systems', 'Explore the BM Tech Services portfolio by the industry or business function you want to support. Our offerings span hospitality, healthcare, education, HR and smart embedded systems, with development and implementation services to support your requirements.')}
+    title: 'Software Products & Smart Systems | AMPIGEN',
+    description: 'Explore AMPIGEN software for hospitality, healthcare, education and HR, plus home automation, queue management, Smart LED and connected systems.',
+    html: `${innerHero('Products', 'Industry Software Products & Smart Systems', 'Explore the AMPIGEN portfolio by the industry or business function you want to support. Our offerings span hospitality, healthcare, education, HR and smart embedded systems, with development and implementation services to support your requirements.')}
       <section class="section"><div class="container">
         ${sectionHead('PRODUCT FAMILIES', 'Find the right starting point', 'Each family brings together related offerings and links to their product and implementation scope.')}
         ${catalogueControls()}

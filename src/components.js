@@ -43,7 +43,7 @@ export function innerHero(label, title, copy, parent, asideHtml = '') {
 }
 
 export function brand() {
-  return '<a class="brand" href="/" aria-label="BM Tech Services home"><img src="/brand/bmtech-logo.webp" width="1600" height="639" alt="BMTech — Engineering Intelligence | Transforming Business"></a>';
+  return '<a class="brand" href="/" aria-label="AMPIGEN home"><img src="/brand/ampigen-logo.webp" width="1672" height="941" decoding="async" alt="AMPIGEN — Engineering Intelligence | Transforming Business"></a>';
 }
 
 const menuDescriptions = {
@@ -107,7 +107,7 @@ export function footer() {
     column('Solutions', solutions.map(s => ['/solutions/#' + s.id, s.title]).concat([['/services/', 'Services']]), '/solutions/') +
     column('Resources', [['/resources/#company-profile', 'Company profile'], ['/resources/#resource-0', 'Product planning'], ['/resources/#resource-1', 'Development briefs'], ['/resources/#questions', 'Common questions']], '/resources/') +
     column('Company', [['/about/', 'About us'], ['/contact/', 'Contact us']]) +
-    '</div><div class="footer-bottom"><span>© <span id="year"></span> BM Tech Services. All rights reserved.</span><span>AI • Cloud • IoT • Automation • Digital Transformation</span></div></div></footer>';
+    '</div><div class="footer-bottom"><span>© <span id="year"></span> AMPIGEN. All rights reserved.</span><span>AI • Cloud • IoT • Automation • Digital Transformation</span></div></div></footer>';
 }
 
 export function process() {

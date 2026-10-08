@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { routes } from '../src/routes.js';
 import { renderPage } from '../src/site.js';
+import { contact } from '../src/pages/enquiry.js';
 import { applySeoMetadata, createRobotsTxt, createSitemap, getBreadcrumbs, renderSeoMetadata, resolveSeoConfig } from '../src/seo.js';
 
-const page = { title: 'Healthcare Software | BM Tech Services', description: 'Explore healthcare software for hospitals, clinics and pharmacies.' };
+const page = { title: 'Healthcare Software | AMPIGEN', description: 'Explore healthcare software for hospitals, clinics and pharmacies.' };
 const production = () => resolveSeoConfig({ SITE_URL: 'https://www.example.com/', SITE_INDEXABLE: 'true' });
 const readSchema = html => JSON.parse(html.match(/<script type="application\/ld\+json">([^]*?)<\/script>/)[1]);
 
@@ -58,13 +59,16 @@ test('Nested pages emit consistent absolute social URLs, truthful organization d
   for (const attribute of ['rel="canonical" href', 'property="og:url" content']) {
     assert.ok(metadata.includes(`${attribute}="https://www.example.com/products/healthcare/"`));
   }
-  assert.match(metadata, /property="og:image" content="https:\/\/www\.example\.com\/brand\/social-preview\.jpg"/);
-  assert.match(metadata, /name="twitter:image" content="https:\/\/www\.example\.com\/brand\/social-preview\.jpg"/);
+  assert.match(metadata, /property="og:image" content="https:\/\/www\.example\.com\/brand\/ampigen-logo\.png"/);
+  assert.match(metadata, /name="twitter:image" content="https:\/\/www\.example\.com\/brand\/ampigen-logo\.png"/);
+  assert.match(metadata, /property="og:image:type" content="image\/png"/);
+  assert.match(metadata, /property="og:image:width" content="1672"/);
+  assert.match(metadata, /property="og:image:height" content="941"/);
   assert.match(metadata, /name="twitter:card" content="summary_large_image"/);
   const schema = readSchema(metadata);
   assert.deepEqual(schema['@graph'][0], {
     '@type': 'Organization', '@id': 'https://www.example.com/#organization',
-    name: 'BM Tech Services', url: 'https://www.example.com/', logo: 'https://www.example.com/brand/bmtech-logo.webp'
+    name: 'AMPIGEN', url: 'https://www.example.com/', logo: 'https://www.example.com/brand/ampigen-logo.png'
   });
   assert.deepEqual(schema['@graph'][1].itemListElement.map(({ position, name, item }) => [position, name, item]), [
     [1, 'Home', 'https://www.example.com/'],
@@ -73,6 +77,28 @@ test('Nested pages emit consistent absolute social URLs, truthful organization d
   ]);
   assert.doesNotMatch(JSON.stringify(schema), /telephone|address|contactPoint|rating|review|FAQPage|SoftwareApplication/);
   assert.equal(readSchema(renderSeoMetadata('/', page, production()))['@graph'].length, 1);
+});
+
+test('AMPIGEN identity is consistent across rendered pages, entry templates and structured data', async () => {
+  const legacyBrand = /\bBM\s*Tech(?:\s+Services)?\b|bm-tech-services|\/brand\/bmtech-logo\.|\/brand\/social-preview\./i;
+  for (const route of routes) {
+    const renderedPage = renderPage(route);
+    const metadata = renderSeoMetadata(route, renderedPage, production());
+    const template = await readFile(new URL(`..${route}index.html`, import.meta.url), 'utf8');
+    assert.match(renderedPage.title, /\bAMPIGEN\b/, `${route}: page title`);
+    assert.match(renderedPage.html, /\bAMPIGEN\b/, `${route}: rendered brand`);
+    assert.match(template, /\bAMPIGEN\b/, `${route}: entry template`);
+    assert.match(template, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml" \/>/, `${route}: AMPIGEN favicon`);
+    assert.doesNotMatch(template, /favicon\.(?:ico|png)|apple-touch-icon/, `${route}: no old favicon references`);
+    assert.doesNotMatch(`${renderedPage.html}\n${metadata}\n${template}`, legacyBrand, `${route}: old branding or asset reference`);
+    assert.match(metadata, /property="og:site_name" content="AMPIGEN"/, route);
+    const organization = readSchema(metadata)['@graph'].find(item => item['@type'] === 'Organization');
+    assert.equal(organization.name, 'AMPIGEN', route);
+    assert.equal(organization.logo, 'https://www.example.com/brand/ampigen-logo.png', route);
+  }
+  assert.match(renderPage('/resources/').html, /href="\/documents\/ampigen-company-profile\.pdf"/);
+  // Rebranding changes the public identity, not the verified delivery destinations.
+  assert.deepEqual(contact, { email: 'bmtechservices2025@gmail.com', phone: '+919642668815' });
 });
 
 test('Breadcrumb schema matches each rendered page and is omitted where no breadcrumb is visible', () => {
@@ -125,7 +151,7 @@ test('Prerender metadata replaces legacy and repeated tags while preserving page
     /rel="canonical"/g, /name="twitter:card"/g, /type="application\/ld\+json"/g]) {
     assert.equal([...output.matchAll(pattern)].length, 1, pattern.source);
   }
-  assert.doesNotMatch(output, /outdated|FAQPage|content="\/brand\/social-preview/);
+  assert.doesNotMatch(output, /outdated|FAQPage|content="\/brand\/(?:ampigen-)?social-preview/);
   assert.match(output, /<link rel="stylesheet" href="\/src\/styles\.css"/);
   assert.match(output, /<script type="module" src="\/src\/main\.js"><\/script>/);
   assert.match(output, /<a class="skip-link" href="#main">Skip to content<\/a>/);

@@ -5,10 +5,10 @@ export const productFamilies = [
     title: 'Hospitality Software',
     path: '/products/hospitality/',
     h1: 'Hospitality Software for Restaurants, Hotels, Guest Houses & Lodges',
-    seoTitle: 'Hospitality Management Software | BM Tech Services',
-    metaDescription: 'Explore restaurant, hotel, guest house and lodge software from BM Tech Services, with implementation and custom development for your hospitality business.',
+    seoTitle: 'Hospitality Management Software | AMPIGEN',
+    metaDescription: 'Explore restaurant, hotel, guest house and lodge software from AMPIGEN, with implementation and custom development for your hospitality business.',
     description: 'Solutions for restaurants, guest houses, hotels and lodges, supported by implementation and custom development around your operating model.',
-    intro: 'BM Tech Services provides hospitality software for restaurant and accommodation businesses. Explore the offering that fits your operating model, then bring product implementation, custom development and system integration together around your requirements.',
+    intro: 'AMPIGEN provides hospitality software for restaurant and accommodation businesses. Explore the offering that fits your operating model, then bring product implementation, custom development and system integration together around your requirements.',
     products: [
       {
         id: 'restaurant-solution',
@@ -59,10 +59,10 @@ export const productFamilies = [
     title: 'Healthcare Software',
     path: '/products/healthcare/',
     h1: 'Healthcare Software for Hospitals, Clinics & Pharmacies',
-    seoTitle: 'Healthcare Management Software | BM Tech Services',
-    metaDescription: 'Explore hospital, clinic and pharmacy software, EMR, EHR and specialist healthcare systems, with implementation support from BM Tech Services.',
+    seoTitle: 'Healthcare Management Software | AMPIGEN',
+    metaDescription: 'Explore hospital, clinic and pharmacy software, EMR, EHR and specialist healthcare systems, with implementation support from AMPIGEN.',
     description: 'Software for hospitals, clinics and pharmacies, with electronic records and specialist healthcare systems for clinical and administrative needs.',
-    intro: 'BM Tech Services provides healthcare software for hospitals, clinics and pharmacies, alongside electronic records and specialist healthcare systems. We help organizations select the relevant product, define clinical and administrative workflows, and plan implementation, integration, training and support.',
+    intro: 'AMPIGEN provides healthcare software for hospitals, clinics and pharmacies, alongside electronic records and specialist healthcare systems. We help organizations select the relevant product, define clinical and administrative workflows, and plan implementation, integration, training and support.',
     products: [
       {
         id: 'hospital',
@@ -97,7 +97,7 @@ export const productFamilies = [
       {
         id: 'pms',
         name: 'PMS',
-        description: 'A healthcare system in the BMTech portfolio. Bring your organization’s requirements into a focused product discussion and implementation plan.',
+        description: 'A healthcare system in the AMPIGEN portfolio. Bring your organization’s requirements into a focused product discussion and implementation plan.',
         tags: []
       },
       {
@@ -115,7 +115,7 @@ export const productFamilies = [
       {
         id: 'sis',
         name: 'SIS',
-        description: 'A healthcare offering within the BMTech portfolio, assessed against your organization’s users, operating context and system requirements.',
+        description: 'A healthcare offering within the AMPIGEN portfolio, assessed against your organization’s users, operating context and system requirements.',
         tags: []
       }
     ],
@@ -143,11 +143,11 @@ export const productFamilies = [
     title: 'Education Software',
     path: '/products/education/',
     h1: 'School Management Software & Parent App Solutions',
-    seoTitle: 'School Management & Parent Apps | BM Tech Services',
-    metaDescription: 'Explore BMTech School Management App and Parent App solutions, with implementation, integration and custom development for your institution.',
+    seoTitle: 'School Management & Parent Apps | AMPIGEN',
+    metaDescription: 'Explore AMPIGEN School Management App and Parent App solutions, with implementation, integration and custom development for your institution.',
     description: 'School Management App and Parent App solutions that bring school administration and the parent experience into a focused digital plan.',
-    intro: 'Bring school administration and the parent experience into a clear digital plan. BM Tech Services provides a School Management App and Parent App, supported by implementation and custom development around your institution’s requirements.',
-    brandNote: 'My School is part of the BMTech education portfolio.',
+    intro: 'Bring school administration and the parent experience into a clear digital plan. AMPIGEN provides a School Management App and Parent App, supported by implementation and custom development around your institution’s requirements.',
+    brandNote: 'My School is part of the AMPIGEN education portfolio.',
     products: [
       {
         id: 'school-management-app',
@@ -190,10 +190,10 @@ export const productFamilies = [
     title: 'Smart & Embedded Systems',
     path: '/products/embedded-systems/',
     h1: 'Smart & Embedded Systems for Connected Spaces',
-    seoTitle: 'Smart & Embedded Systems | BM Tech Services',
-    metaDescription: 'Explore BMTech home automation, queue management, Smart LED and IoT Gateway solutions, supported by embedded engineering and integration.',
+    seoTitle: 'Smart & Embedded Systems | AMPIGEN',
+    metaDescription: 'Explore AMPIGEN home automation, queue management, Smart LED and IoT Gateway solutions, supported by embedded engineering and integration.',
     description: 'Home Automation, Queue Management, Smart LED and IoT Gateway offerings for connected spaces, service facilities and equipment.',
-    intro: 'Connect physical spaces, devices and digital workflows with BM Tech Services. Our portfolio includes Home Automation, Queue Management, Smart LED and IoT Gateway offerings, supported by firmware development, embedded engineering and device integration.',
+    intro: 'Connect physical spaces, devices and digital workflows with AMPIGEN. Our portfolio includes Home Automation, Queue Management, Smart LED and IoT Gateway offerings, supported by firmware development, embedded engineering and device integration.',
     products: [
       {
         id: 'home-automation',
@@ -243,10 +243,10 @@ export const productFamilies = [
     title: 'HR & Workforce Software',
     path: '/products/hr/',
     h1: 'HR Software for Workforce Operations',
-    seoTitle: 'HR Management Software | BM Tech Services',
-    metaDescription: 'Explore BMTech HR software for organizations across industries, with implementation, integration and custom development around workforce requirements.',
+    seoTitle: 'HR Management Software | AMPIGEN',
+    metaDescription: 'Explore AMPIGEN HR software for organizations across industries, with implementation, integration and custom development around workforce requirements.',
     description: 'HR software for organizations across industries, supported by implementation and integration around the way your teams work.',
-    intro: 'BM Tech Services provides HR software for organizations across industries. Bring your workforce administration requirements, existing systems and team workflows into a focused product and implementation discussion.',
+    intro: 'AMPIGEN provides HR software for organizations across industries. Bring your workforce administration requirements, existing systems and team workflows into a focused product and implementation discussion.',
     products: [
       {
         id: 'hr-solution',

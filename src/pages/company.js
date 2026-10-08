@@ -118,8 +118,8 @@ const crossIndustryFamilies = productFamilies.filter(family => ['embedded-system
 
 export const companyPages = {
   '/solutions/': {
-    title: 'Business Digital Solutions & Automation | BM Tech Services',
-    description: 'Connect industry software, custom development, smart systems and integration to address operational needs with BM Tech Services.',
+    title: 'Business Digital Solutions & Automation | AMPIGEN',
+    description: 'Connect industry software, custom development, smart systems and integration to address operational needs with AMPIGEN.',
     html: `${innerHero(
       'Solutions',
       'Digital Solutions for Business Operations',
@@ -149,7 +149,7 @@ export const companyPages = {
   },
 
   '/industries/': {
-    title: 'Industry Digital Solutions | BM Tech Services',
+    title: 'Industry Digital Solutions | AMPIGEN',
     description: 'Explore software and digital solutions for hospitality, healthcare, education, property, manufacturing, retail and service organizations.',
     html: `${innerHero(
       'Industries',
@@ -193,8 +193,8 @@ export const companyPages = {
   },
 
   '/services/': {
-    title: 'Software, AI & IoT Services | BM Tech Services',
-    description: 'Explore custom software, AI, cloud, IoT, embedded engineering, integration, websites, digital marketing and technical training from BM Tech Services.',
+    title: 'Software, AI & IoT Services | AMPIGEN',
+    description: 'Explore custom software, AI, cloud, IoT, embedded engineering, integration, websites, digital marketing and technical training from AMPIGEN.',
     html: `${innerHero(
       'Services',
       'Software Development, AI, Cloud & IoT Services',
@@ -218,8 +218,8 @@ export const companyPages = {
   },
 
   '/resources/': {
-    title: 'Software Buying & Project Resources | BM Tech Services',
-    description: 'Explore the BM Tech Services company profile and practical questions for planning industry software, connected systems and digital projects.',
+    title: 'Software Buying & Project Resources | AMPIGEN',
+    description: 'Explore the AMPIGEN company profile and practical questions for planning industry software, connected systems and digital projects.',
     html: `${innerHero(
       'Resources',
       'A Clearer Start to Your Digital Project',
@@ -228,7 +228,7 @@ export const companyPages = {
     <section class="section" id="company-profile">
       <div class="container profile-resource">
         <div class="profile-cover" aria-hidden="true">
-          <span>BM TECH SERVICES</span>
+          <span>AMPIGEN</span>
           ${icon('document')}
           <strong>Company<br>profile</strong>
           <p>Industry software.<br>Smart systems.<br>Engineering delivery.</p>
@@ -239,7 +239,7 @@ export const companyPages = {
           <h2>Our portfolio. Your starting point.</h2>
           <p class="lead-copy">Explore our industry software, smart and embedded systems, technical services and implementation approach in one company profile.</p>
           <p>Share it with your team to prepare a product evaluation, a custom development brief or a discussion about connecting existing systems.</p>
-          ${link('/documents/bm-tech-services-company-profile.pdf', 'Download company profile')}
+          ${link('/documents/ampigen-company-profile.pdf', 'Download company profile')}
         </div>
       </div>
     </section>
@@ -268,11 +268,11 @@ export const companyPages = {
   },
 
   '/about/': {
-    title: 'About BM Tech Services | Digital Solutions Provider',
-    description: 'Meet BM Tech Services: an end-to-end digital solution provider combining industry software, embedded systems, custom development and implementation.',
+    title: 'About AMPIGEN | Digital Solutions Provider',
+    description: 'Meet AMPIGEN: an end-to-end digital solution provider combining industry software, embedded systems, custom development and implementation.',
     html: `${innerHero(
       'About',
-      'About BM Tech Services',
+      'About AMPIGEN',
       'An end-to-end digital solution provider bringing industry software, smart systems and custom engineering together.'
     )}
     <section class="section" id="about">
