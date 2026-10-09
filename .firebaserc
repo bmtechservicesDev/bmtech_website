@@ -1,5 +1,12 @@
 {
   "projects": {
     "default": "bmtech-website"
+  },
+  "targets": {
+    "bmtech-website": {
+      "hosting": {
+        "ampigen": ["ampigen"]
+      }
+    }
   }
 }
