@@ -1,28 +1,25 @@
 import { test, expect } from '@playwright/test';
 import { createHash } from 'node:crypto';
 
+// Independent acceptance inventory from the 11 October testing feedback.
+const approvedProducts = [
+  ['clinic-automation', 'Clinic Automation', 'healthcare'],
+  ['restaurant-solution', 'Restaurant Solution', 'hospitality'],
+  ['my-school', 'My School', 'education'],
+  ['queue-management', 'Queue Management', 'queue'],
+  ['smart-led', 'Smart LED', 'display']
+];
+const industryInventory = [
+  ['healthcare', 'Healthcare'], ['hospitality', 'Hospitality'], ['education', 'Education'],
+  ['embedded-systems', 'Embedded Systems'], ['properties', 'Residential & Commercial Properties'],
+  ['manufacturing', 'Manufacturing & Engineering'], ['retail', 'Retail & Commerce'],
+  ['services', 'Service Organizations'], ['startups', 'Startups & Product Teams']
+];
 const routes = [
   '/', '/services/', '/solutions/', '/about/', '/contact/', '/book-a-demo/',
-  '/products/', '/industries/', '/resources/', '/products/hospitality/',
-  '/products/healthcare/', '/products/education/', '/products/embedded-systems/', '/products/hr/'
-];
-
-// Independent business inventory: catches omitted products when the catalogue grows.
-const portfolioFamilies = [
-  { id: 'hospitality', label: 'Hospitality Software', products: [
-    ['restaurant-solution', 'Restaurant Solution'], ['guest-house', 'Guest House'], ['hotel', 'Hotel'], ['lodge', 'Lodge']
-  ] },
-  { id: 'healthcare', label: 'Healthcare Software', products: [
-    ['hospital', 'Hospital'], ['clinic-automation', 'Clinic Automation'], ['pharmacy', 'Pharmacy'],
-    ['emr', 'EMR'], ['ehr', 'EHR'], ['pms', 'PMS'], ['lis', 'LIS'], ['ris', 'RIS'], ['sis', 'SIS']
-  ] },
-  { id: 'education', label: 'Education Software', products: [
-    ['school-management-app', 'School Management App'], ['parent-app', 'Parent App']
-  ] },
-  { id: 'embedded-systems', label: 'Smart & Embedded Systems', products: [
-    ['home-automation', 'Home Automation'], ['queue-management', 'Queue Management'], ['smart-led', 'Smart LED'], ['iot-gateway', 'IoT Gateway']
-  ] },
-  { id: 'hr', label: 'HR & Workforce Software', products: [['hr-solution', 'HR Solution']] }
+  '/products/', '/industries/', '/resources/',
+  ...approvedProducts.map(([id]) => `/products/${id}/`),
+  ...industryInventory.map(([id]) => `/industries/${id}/`)
 ];
 
 for (const width of [320, 375, 480, 768, 1024, 1280, 1440, 1920]) {
@@ -37,7 +34,7 @@ for (const width of [320, 375, 480, 768, 1024, 1280, 1440, 1920]) {
       await expect(page.locator('main')).toHaveCount(1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
       await expect(page.locator('footer .footer-contact, footer address, footer a[href^="mailto:"], footer a[href^="tel:"]')).toHaveCount(0);
-      await page.screenshot({ path: testInfo.outputPath(`${route.replaceAll('/', '') || 'home'}-${width}.png`), fullPage: true });
+      if ([375, 1440].includes(width)) await page.screenshot({ path: testInfo.outputPath(`${route.replaceAll('/', '') || 'home'}-${width}.png`), fullPage: true });
     }
     expect(errors).toEqual([]);
   });
@@ -166,8 +163,8 @@ test('Mobile menu allows navigation', async ({ page }) => {
   await toggle.click();
   await expect(page.getByRole('button', { name: 'Close navigation' })).toHaveAttribute('aria-expanded', 'true');
   await page.getByRole('button', {name:'Products submenu',exact:true}).click();
-  await page.locator('#submenu-0').getByRole('link', {name:'Hospitality Software',exact:true}).click();
-  await expect(page).toHaveURL(/\/products\/hospitality\/$/);
+  await page.locator('#submenu-0').getByRole('link', {name:'Clinic Automation',exact:true}).click();
+  await expect(page).toHaveURL(/\/products\/clinic-automation\/$/);
   await expect(page.locator('nav button[aria-current="page"]')).toHaveText('Products');
 });
 
@@ -283,15 +280,15 @@ test('Every desktop heading opens hover dropdown and supports keyboard dismissal
   }
 });
 
-test('Mobile dropdowns expand by tap and the product portfolio link resolves', async ({ page }) => {
+test('Mobile dropdowns expand by tap and the selected product page resolves', async ({ page }) => {
   await page.setViewportSize({width:375,height:844});
   await page.goto('/');
   await page.getByRole('button', {name:'Open navigation'}).click();
   const button = page.getByRole('button', {name:'Products submenu', exact:true});
   await button.click();
   await expect(button).toHaveAttribute('aria-expanded','true');
-  await page.locator('#submenu-0').getByRole('link',{name:'Product portfolio',exact:true}).click();
-  await expect(page).toHaveURL(/\/products\/$/);
+  await page.locator('#submenu-0').getByRole('link',{name:'My School',exact:true}).click();
+  await expect(page).toHaveURL(/\/products\/my-school\/$/);
   await expect(page.locator('main h1')).toBeVisible();
 });
 
@@ -365,7 +362,7 @@ test('Reference header contains four plain headings and one demo CTA', async ({p
   await expect(page.locator('.site-nav')).not.toContainText('Contact');
   await expect(page.locator('.nav-cta')).toHaveCount(1);
   await expect(page.locator('#submenu-1 .mega-card strong')).toHaveText([
-    'Hospitality', 'Healthcare', 'Education', 'Residential & Commercial Properties',
+    'Healthcare', 'Hospitality', 'Education', 'Embedded Systems', 'Residential & Commercial Properties',
     'Manufacturing & Engineering', 'Retail & Commerce', 'Service Organizations', 'Startups & Product Teams'
   ]);
   await expect(page.locator('#submenu-3 .mega-card')).toHaveCount(5);
@@ -393,7 +390,12 @@ test('Repeated card enquiry actions are removed on every page', async ({page}) =
     await expect(page.locator('.card-action')).toHaveCount(0);
     await expect(page.getByRole('link', {name:/Request details|Enquire about this solution|Enquire about this service/})).toHaveCount(0);
     await expect(page.locator('.nav-cta')).toHaveCount(1);
-    await expect(page.locator('.nav-cta')).toHaveAttribute('href','/book-a-demo/');
+    const product = approvedProducts.find(([id]) => route === `/products/${id}/`);
+    const industry = industryInventory.find(([id]) => route === `/industries/${id}/`);
+    const expectedHref = product
+      ? `/book-a-demo/?service=${encodeURIComponent(product[1])}`
+      : industry ? `/book-a-demo/?industry=${industry[0]}` : '/book-a-demo/';
+    await expect(page.locator('.nav-cta')).toHaveAttribute('href', expectedHref);
   }
 });
 
@@ -469,283 +471,231 @@ test('Contact validates names email and consent and prepares accurate draft', as
   await expect(page.locator('#form-result')).toBeHidden();
 });
 
-test('Every portfolio entry is visible on the hub and its family page', async ({ page }) => {
-  await page.goto('/products/');
-  const main = page.locator('main');
-  await expect(main.locator('[data-product-family]')).toHaveCount(5);
-  await expect(main.locator('.portfolio-links a')).toHaveCount(20);
-  for (const family of portfolioFamilies) {
-    const group = main.locator(`[data-product-family="${family.id}"]`);
-    await expect(group).toHaveCount(1);
-    await expect(group.getByRole('link', { name: family.label, exact: true })).toHaveAttribute('href', `/products/${family.id}/`);
-    await expect(group.locator('.portfolio-links a')).toHaveCount(family.products.length);
-    for (const [id, name] of family.products) {
-      const product = group.getByRole('link', { name, exact: true });
-      await expect(product).toBeVisible();
-      await expect(product).toHaveAttribute('href', `/products/${family.id}/#${id}`);
-    }
-  }
-  for (const family of portfolioFamilies) {
-    await page.goto(`/products/${family.id}/`);
-    await expect(main.locator('.product-card[data-product]')).toHaveCount(family.products.length);
-    for (const [id, name] of family.products) {
-      const product = main.locator(`.product-card[data-product="${id}"]`);
-      await expect(product).toHaveAttribute('id', id);
-      await expect(product.getByRole('heading', { name, exact: true })).toBeVisible();
-    }
-  }
-});
 
-test('Homepage and product menu lead to all five families with nested breadcrumbs', async ({ page }) => {
+test('Exactly five ordered products and relevant icons appear on every discovery surface', async ({ page }) => {
+  const names = approvedProducts.map(([, name]) => name);
+  const symbols = approvedProducts.map(([, , symbol]) => symbol);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
-  for (const family of portfolioFamilies) {
-    await expect(page.locator('main .family-grid').getByRole('link', { name: family.label, exact: true }))
-      .toHaveAttribute('href', `/products/${family.id}/`);
-  }
+  await expect(page.locator('[data-map-product] strong')).toHaveText(names);
+  await expect(page.locator('[data-home-product] h3')).toHaveText(names);
+  expect(await page.locator('[data-home-product] .icon-badge svg').evaluateAll(nodes => nodes.map(node => node.dataset.icon))).toEqual(symbols);
   await page.getByRole('button', { name: 'Products submenu', exact: true }).hover();
-  await expect(page.locator('#submenu-0 .mega-card')).toHaveCount(6);
-  for (const family of portfolioFamilies) {
-    await expect(page.locator('#submenu-0').getByRole('link', { name: family.label, exact: true }))
-      .toHaveAttribute('href', `/products/${family.id}/`);
+  await expect(page.locator('#submenu-0 .mega-card strong')).toHaveText(names);
+  expect(await page.locator('#submenu-0 .mega-icon svg').evaluateAll(nodes => nodes.map(node => node.dataset.icon))).toEqual(symbols);
+  await expect(page.locator('footer .footer-column').first().locator('li a')).toHaveText(names);
+  await page.goto('/products/');
+  await expect(page.locator('[data-product-entry] h3')).toHaveText(names);
+  expect(await page.locator('[data-product-entry] .icon-badge svg').evaluateAll(nodes => nodes.map(node => node.dataset.icon))).toEqual(symbols);
+  for (const [id, name] of approvedProducts) {
+    await expect(page.locator(`[data-product-entry="${id}"]`).getByRole('link', { name, exact: true })).toHaveAttribute('href', `/products/${id}/`);
   }
-  await expect(page.locator('#submenu-0').getByRole('link', { name: 'Product portfolio', exact: true }))
-    .toHaveAttribute('href', '/products/');
+  await expect(page.locator('[data-product-family], .product-index, .family-number')).toHaveCount(0);
+});
 
-  for (const family of portfolioFamilies) {
-    await page.goto(`/products/${family.id}/`);
+test('Product detail pages preserve selection in the single header CTA and show nested breadcrumbs', async ({ page }) => {
+  for (const [id, name] of approvedProducts) {
+    await page.goto(`/products/${id}/`);
     const breadcrumb = page.getByRole('navigation', { name: 'Breadcrumb', exact: true });
-    await expect(breadcrumb.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute('href', '/');
+    await expect(breadcrumb.locator('[aria-current="page"]')).toHaveText(name);
     await expect(breadcrumb.getByRole('link', { name: 'Products', exact: true })).toHaveAttribute('href', '/products/');
-    await expect(breadcrumb.locator('[aria-current="page"]')).toHaveCount(1);
-    const currentLabel = { hospitality: 'Hospitality', healthcare: 'Healthcare', education: 'Education', 'embedded-systems': 'Embedded Systems', hr: 'HR' }[family.id];
-    await expect(breadcrumb.locator('[aria-current="page"]')).toHaveText(currentLabel);
-    await breadcrumb.getByRole('link', { name: 'Products', exact: true }).click();
-    await expect(page).toHaveURL(/\/products\/$/);
+    await expect(page.locator('main .workflow-card')).toHaveCount(3);
+    await expect(page.locator('main .faq-list details')).toHaveCount(2);
+    await page.locator('.nav-cta').click();
+    await expect(page.locator('[name="interest"]')).toHaveValue(name);
+    expect(new URL(page.url()).searchParams.get('service')).toBe(name);
   }
 });
 
-test('Old product and industry fragments retain relevant destinations', async ({ page }) => {
-  const productTargets = [
-    'Restaurant Solution', 'Clinic Automation', 'School Management App', 'IoT Gateway',
-    'Smart LED', 'Queue Management', 'Website Development & Hosting', 'Domain Training & Education'
-  ];
-  const industryTargets = [
-    'Education', 'Smart & Embedded Systems', 'Manufacturing & Engineering', 'Hospitality',
-    'Healthcare', 'Retail & Commerce', 'Startups & Product Teams', 'Service Organizations'
-  ];
-  for (const [route, prefix, labels] of [
-    ['/products/', 'product', productTargets], ['/industries/', 'industry', industryTargets]
-  ]) {
+test('Every industry card and navigation entry opens its own page without visible numbering', async ({ page }) => {
+  for (const width of [375, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/industries/');
+    await expect(page.locator('.industry-route-card')).toHaveCount(9);
+    await expect(page.locator('main .numbered-label, main .family-number, main .product-index')).toHaveCount(0);
+    for (const [id, name] of industryInventory) {
+      await page.goto('/industries/');
+      const card = page.getByRole('link', { name, exact: true }).filter({ has: page.locator('h3') });
+      await expect(card).toHaveAttribute('href', `/industries/${id}/`);
+      if (width === 1440) { await card.focus(); await page.keyboard.press('Enter'); }
+      else await card.click();
+      await expect(page).toHaveURL(new RegExp(`/industries/${id}/$`));
+      await expect(page.locator('[data-industry]')).toHaveAttribute('data-industry', id);
+      await expect(page.locator('.breadcrumbs [aria-current="page"]')).toHaveText(name);
+      await expect(page.locator('.industry-faq-section details')).toHaveCount(2);
+      await expect(page.locator('main .numbered-label, main .family-number, main .product-index')).toHaveCount(0);
+      await expect(page.locator(`footer a[href="/industries/${id}/"]`)).toHaveCount(1);
+      await expect(page.locator(`#submenu-1 a[href="/industries/${id}/"]`)).toHaveCount(1);
+    }
+  }
+});
+
+test('Industry context reaches the demo request and remains editable', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const [id] of industryInventory) {
+    await page.goto(`/industries/${id}/`);
+    await page.locator('.nav-cta').click();
+    await expect(page.locator('[name="industry"]')).toHaveValue(id);
+    await expect(page.locator('[name="interest"]')).toHaveValue('');
+  }
+  await page.locator('[name="industry"]').selectOption('education');
+  await expect(page.locator('#preparation-industry')).toHaveText('Industry context: Education');
+});
+
+test('Old product and industry fragments still identify relevant current content', async ({ page }) => {
+  const productTargets = ['Restaurant Solution', 'Clinic Automation', 'My School', 'Embedded Systems & IoT Development', 'Smart LED', 'Queue Management', 'Website Development & Hosting', 'Domain Training & Education'];
+  const industryTargets = ['Education', 'Embedded Systems', 'Manufacturing & Engineering', 'Hospitality', 'Healthcare', 'Retail & Commerce', 'Startups & Product Teams', 'Service Organizations'];
+  for (const [route, prefix, labels] of [['/products/', 'product', productTargets], ['/industries/', 'industry', industryTargets]]) {
     for (const [index, label] of labels.entries()) {
       await page.goto(`${route}#${prefix}-${index}`);
       const target = page.locator(`main [id="${prefix}-${index}"]`);
       await expect(target).toHaveCount(1);
-      const context = await target.evaluate(node => (node.closest('article') || node.closest('section') || node.parentElement).textContent);
-      expect(context, `${route}#${prefix}-${index}`).toContain(label);
+      const text = await target.evaluate(node => (node.closest('article') || node.closest('li') || node.parentElement).textContent);
+      expect(text).toContain(label);
     }
   }
 });
 
-test('Demo selection groups cover the actual portfolio and retain My School compatibility', async ({ page }) => {
-  await page.goto('/book-a-demo/');
-  const options = await page.locator('select[name="interest"] option').evaluateAll(nodes => nodes.map(node => ({
-    value: node.value,
-    label: node.textContent.trim(),
-    group: node.parentElement.tagName === 'OPTGROUP' ? node.parentElement.label : null
-  })));
-  const familyGroups = new Set();
-  for (const family of portfolioFamilies) {
-    const groups = new Set();
-    for (const [, name] of family.products) {
-      const matches = options.filter(option => option.value === name);
-      expect(matches, name).toHaveLength(1);
-      expect(matches[0].label).toBe(name);
-      expect(matches[0].group, name).toBeTruthy();
-      groups.add(matches[0].group);
-    }
-    expect(groups.size, family.label).toBe(1);
-    familyGroups.add([...groups][0]);
+test('Published family bookmarks move to relevant pages and never act as open redirects', async ({ page, request }) => {
+  const cases = [
+    ['/products/hospitality/#restaurant-solution', '/products/restaurant-solution/'],
+    ['/products/healthcare/#clinic-automation', '/products/clinic-automation/'],
+    ['/products/education/#school-management-app', '/products/my-school/'],
+    ['/products/embedded-systems/#queue-management', '/products/queue-management/'],
+    ['/products/embedded-systems/#smart-led', '/products/smart-led/'],
+    ['/products/embedded-systems/#home-automation', '/industries/properties/'],
+    ['/products/education/#parent-app', '/industries/education/'],
+    ['/products/hr/', '/solutions/#workforce-operations'],
+    ['/products/healthcare/#https://example.invalid', '/industries/healthcare/']
+  ];
+  for (const [old, target] of cases) {
+    const response = await request.get(old.split('#')[0]);
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain('name="robots" content="noindex, follow"');
+    await page.goto(old);
+    await expect(page).toHaveURL(new URL(target, page.url()).href);
+    await expect(page.locator('h1')).toBeVisible();
   }
-  expect(familyGroups.size).toBe(5);
-  expect(options.filter(option => option.value === 'My School')).toEqual([
-    { value: 'My School', label: 'My School', group: 'Existing product enquiry' }
-  ]);
 });
 
-test('Demo preselection supports a new offering and rejects an unknown option', async ({ page }) => {
-  await page.goto('/book-a-demo/?service=HR%20Solution');
-  await expect(page.locator('[name="interest"]')).toHaveValue('HR Solution');
-  await page.locator('[name="firstName"]').fill('Workforce');
-  await page.locator('[name="lastName"]').fill('Buyer');
-  await page.locator('[name="email"]').fill('buyer@example.com');
-  await page.locator('[name="company"]').fill('Example Organization');
-  await page.locator('[name="consent"]').check();
-  await page.getByRole('button', { name: 'Prepare demo request', exact: true }).click();
-  const draft = new URL(await page.locator('#email-brief').getAttribute('href'));
-  expect(draft.searchParams.get('subject')).toBe('Demo request — HR Solution');
-  expect(draft.searchParams.get('body')).toContain('HR Solution');
-  await page.locator('[name="interest"]').selectOption('Parent App');
-  await expect(page.locator('#form-result')).toBeHidden();
-
-  await page.goto('/book-a-demo/?service=Unknown%20Product');
-  await expect(page.locator('[name="interest"]')).toHaveValue('');
-});
-
-test('Catalogue search and family filters combine and clear restores the full portfolio', async ({ page }) => {
+test('Product search and industry filters combine, show useful empty results and reset', async ({ page }) => {
   await page.goto('/products/');
-  const controls = page.locator('[data-catalogue-controls]');
-  const search = page.getByRole('searchbox', { name: 'Search products', exact: true });
-  const entries = page.locator('main [data-product-entry]:visible');
-  const families = page.locator('main [data-product-family]:visible');
-  const status = page.locator('#portfolio-status');
-  const empty = page.locator('#portfolio-empty');
-  await expect(controls).toBeVisible();
-  await expect(search).toHaveAttribute('id', 'portfolio-search');
-  await expect(status).toHaveAttribute('role', 'status');
-  await expect(entries).toHaveCount(20);
-  await expect(families).toHaveCount(5);
-  await expect(status).toContainText(/^20 offerings\b/);
-  await expect(empty).toBeHidden();
-
-  await search.fill('Clinic Automation');
+  const search = page.getByRole('searchbox', { name: 'Search products or workflows', exact: true });
+  const industry = page.getByLabel('Your industry', { exact: true });
+  const entries = page.locator('[data-product-entry]:visible');
+  await expect(entries).toHaveCount(5);
+  await expect(page.locator('#portfolio-status')).toHaveText('5 products');
+  await search.fill('appointments');
   await expect(entries).toHaveCount(1);
-  await expect(entries.getByRole('link', { name: 'Clinic Automation', exact: true })).toBeVisible();
-  await expect(families).toHaveCount(1);
-  await expect(families).toHaveAttribute('data-product-family', 'healthcare');
-  await expect(status).toContainText(/^1 offering\b/);
-  // The search index includes the approved product description, not just its name.
-  await search.fill('after a visit');
-  await expect(entries).toHaveCount(1);
-  await expect(entries.getByRole('link', { name: 'Clinic Automation', exact: true })).toBeVisible();
-
+  await expect(entries.getByRole('heading')).toHaveText('Clinic Automation');
   await search.fill('');
-  await page.locator('[data-family-filter="hospitality"]').click();
-  await expect(page.locator('[data-family-filter="hospitality"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('[data-family-filter="all"]')).toHaveAttribute('aria-pressed', 'false');
-  await expect(entries).toHaveCount(4);
-  await expect(families).toHaveCount(1);
-  await expect(families).toHaveAttribute('data-product-family', 'hospitality');
-  await expect(status).toContainText(/^4 offerings\b/);
-
-  await search.fill('pharmacy');
+  await industry.selectOption('hospitality');
+  await expect(entries.locator('h3')).toHaveText(['Restaurant Solution', 'Queue Management', 'Smart LED']);
+  await search.fill('school');
   await expect(entries).toHaveCount(0);
-  await expect(families).toHaveCount(0);
-  await expect(empty).toBeVisible();
-  await expect(status).toContainText(/^No offerings\b/i);
-  await empty.locator('[data-clear-filters]').click();
+  await expect(page.locator('#portfolio-empty')).toBeVisible();
+  await page.locator('#portfolio-empty [data-clear-filters]').click();
+  await expect(search).toBeFocused();
   await expect(search).toHaveValue('');
-  await expect(page.locator('[data-family-filter="all"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('[data-family-filter="hospitality"]')).toHaveAttribute('aria-pressed', 'false');
-  await expect(entries).toHaveCount(20);
-  await expect(families).toHaveCount(5);
-  await expect(empty).toBeHidden();
-  await expect(status).toContainText(/^20 offerings\b/);
+  await expect(industry).toHaveValue('all');
+  await expect(entries).toHaveCount(5);
+  await expect(page.locator('#portfolio-empty')).toBeHidden();
+  await industry.selectOption('startups');
+  await expect(entries).toHaveCount(0);
+  await expect(page.locator('#portfolio-empty').getByRole('link', { name: 'Explore engineering services', exact: true })).toHaveAttribute('href', '/services/');
 });
 
-test('Catalogue filters and search are usable from the keyboard', async ({ page }) => {
+test('Search links restore filters and offer a usable clipboard fallback', async ({ page }) => {
+  await page.goto('/products/?q=display&industry=healthcare');
+  await expect(page.locator('#portfolio-search')).toHaveValue('display');
+  await expect(page.locator('#portfolio-industry')).toHaveValue('healthcare');
+  await expect(page.locator('[data-product-entry]:visible h3')).toHaveText(['Queue Management', 'Smart LED']);
+  await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { throw new Error('Unavailable'); } } }));
+  await page.getByRole('button', { name: 'Copy search link', exact: true }).click();
+  const copied = new URL(await page.locator('#product-search-link').inputValue());
+  expect(copied.pathname).toBe('/products/');
+  expect(copied.searchParams.get('q')).toBe('display');
+  expect(copied.searchParams.get('industry')).toBe('healthcare');
+  await expect(page.locator('#product-search-link')).toBeFocused();
+  await page.reload();
+  await expect(page.locator('[data-product-entry]:visible')).toHaveCount(2);
+  await page.goto('/products/?industry=unknown&q=%3Cscript%3E');
+  await expect(page.locator('#portfolio-industry')).toHaveValue('all');
+  await expect(page.locator('#portfolio-empty')).toBeVisible();
+  await expect(page.locator('main script')).toHaveCount(0);
+});
+
+test('Product search, filters and preparation checklist work from the keyboard', async ({ page }) => {
   await page.goto('/products/');
-  const entries = page.locator('main [data-product-entry]:visible');
-  const all = page.locator('[data-family-filter="all"]');
-  const hospitality = page.locator('[data-family-filter="hospitality"]');
-  const healthcare = page.locator('[data-family-filter="healthcare"]');
-  const search = page.getByRole('searchbox', { name: 'Search products', exact: true });
-  await all.focus();
+  await page.locator('#portfolio-search').focus();
   await page.keyboard.press('Tab');
-  await expect(hospitality).toBeFocused();
+  await expect(page.locator('#portfolio-industry')).toBeFocused();
+  await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
-  await expect(hospitality).toHaveAttribute('aria-pressed', 'true');
-  await expect(entries).toHaveCount(4);
-  await page.keyboard.press('Tab');
-  await expect(healthcare).toBeFocused();
+  await expect(page.locator('#portfolio-industry')).toHaveValue('healthcare');
+  await expect(page.locator('[data-product-entry]:visible')).toHaveCount(3);
+  await page.locator('#portfolio-search').focus();
+  await page.keyboard.type('appointments');
+  await expect(page.locator('[data-product-entry]:visible')).toHaveCount(1);
+  await page.goto('/products/clinic-automation/');
+  await expect(page.locator('[data-preparation-status]')).toHaveText('0 of 4 points reviewed');
+  await page.locator('[data-preparation-item]').first().focus();
   await page.keyboard.press('Space');
-  await expect(healthcare).toHaveAttribute('aria-pressed', 'true');
-  await expect(hospitality).toHaveAttribute('aria-pressed', 'false');
-  await expect(entries).toHaveCount(9);
-  await search.focus();
-  await page.keyboard.type('Clinic Automation');
-  await expect(entries).toHaveCount(1);
-  await expect(entries.getByRole('link', { name: 'Clinic Automation', exact: true })).toBeVisible();
-  await page.keyboard.press('ControlOrMeta+A');
-  await page.keyboard.press('Backspace');
-  await expect(search).toHaveValue('');
-  await expect(entries).toHaveCount(9);
+  await expect(page.locator('[data-preparation-status]')).toHaveText('1 of 4 points reviewed');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Space');
+  await expect(page.locator('[data-preparation-status]')).toHaveText('2 of 4 points reviewed');
 });
 
-test('Legacy product hash navigation reveals destinations hidden by catalogue filters', async ({ page }) => {
-  await page.goto('/products/');
-  const search = page.getByRole('searchbox', { name: 'Search products', exact: true });
-  await page.locator('[data-family-filter="hospitality"]').click();
-  await search.fill('restaurant');
-  await expect(page.locator('main [data-product-entry]:visible')).toHaveCount(1);
-  await expect(page.locator('main [data-product-family="healthcare"]')).toBeHidden();
-  // A same-document fragment change must recover a previously hidden destination.
+test('Legacy hash navigation reveals a product hidden by active search filters', async ({ page }) => {
+  await page.goto('/products/?q=restaurant&industry=hospitality');
+  await expect(page.locator('[data-product-entry]:visible')).toHaveCount(1);
   await page.evaluate(() => { window.location.hash = 'product-1'; });
-  await expect(page).toHaveURL(/\/products\/#product-1$/);
-  await expect(search).toHaveValue('');
-  await expect(page.locator('[data-family-filter="all"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('main [data-product-entry]:visible')).toHaveCount(20);
-  await expect(page.locator('main [data-product-family="healthcare"]')).toBeVisible();
-  const clinic = page.locator('main .portfolio-links').getByRole('link', { name: 'Clinic Automation', exact: true });
-  await expect(clinic).toBeVisible();
-  await expect(clinic).toBeInViewport();
+  await expect(page.locator('#portfolio-search')).toHaveValue('');
+  await expect(page.locator('#portfolio-industry')).toHaveValue('all');
+  await expect(page.locator('[data-product-entry]:visible')).toHaveCount(5);
+  await expect(page.locator('[data-product-entry="clinic-automation"]')).toBeInViewport();
 });
 
-test('Without JavaScript the complete portfolio remains readable and filtering stays hidden', async ({ browser, baseURL }) => {
+test('Without JavaScript products, industry routes and legacy fallbacks remain usable', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
   try {
     const page = await context.newPage();
     await page.goto('/products/');
-    await expect(page.locator('[data-catalogue-controls]')).toHaveCount(1);
     await expect(page.locator('[data-catalogue-controls]')).toBeHidden();
-    await expect(page.locator('main [data-product-entry]:visible')).toHaveCount(20);
-    await expect(page.locator('main [data-product-family]:visible')).toHaveCount(5);
-    for (const family of portfolioFamilies) {
-      const group = page.locator(`main [data-product-family="${family.id}"]`);
-      for (const [, name] of family.products) {
-        await expect(group.getByRole('link', { name, exact: true })).toBeVisible();
-      }
-    }
-    await page.locator('main .portfolio-links').getByRole('link', { name: 'Clinic Automation', exact: true }).click();
-    await expect(page).toHaveURL(/\/products\/healthcare\/#clinic-automation$/);
-    await expect(page.locator('[data-product="clinic-automation"]').getByRole('heading', { name: 'Clinic Automation', exact: true })).toBeVisible();
-  } finally {
-    await context.close();
-  }
+    await expect(page.locator('[data-product-entry]:visible h3')).toHaveText(approvedProducts.map(([, name]) => name));
+    await page.locator('[data-product-entry="clinic-automation"] a').click();
+    await expect(page).toHaveURL(/\/products\/clinic-automation\/$/);
+    await expect(page.locator('h1')).toContainText('Clinic Automation');
+    await page.goto('/industries/');
+    await page.locator('.industry-route-card[href="/industries/education/"]').click();
+    await expect(page.locator('[data-industry="education"]')).toBeVisible();
+    await page.goto('/products/education/');
+    await page.getByRole('link', { name: 'Explore Education', exact: true }).click();
+    await expect(page).toHaveURL(/\/industries\/education\/$/);
+  } finally { await context.close(); }
 });
 
-test('Contact preselection and draft values accept only the supported enquiry choices', async ({ page }) => {
-  const fillContact = async () => {
+test('Contact preselection preserves the enquiry type and rejects unsupported choices', async ({ page }) => {
+  const fill = async () => {
     await page.locator('[name="firstName"]').fill('Portfolio');
     await page.locator('[name="lastName"]').fill('Buyer');
     await page.locator('[name="email"]').fill('portfolio@example.com');
     await page.locator('[name="consent"]').check();
   };
   await page.goto('/contact/?service=HR%20Solution&type=Digital%20transformation');
-  await expect(page.locator('[name="interest"]')).toHaveValue('HR Solution');
-  await fillContact();
+  await expect(page.locator('[name="interest"]')).toHaveValue('Business applications');
+  await fill();
   await page.getByRole('button', { name: 'Prepare enquiry', exact: true }).click();
   const supported = new URL(await page.locator('#email-brief').getAttribute('href'));
-  expect(supported.searchParams.get('body')).toContain('Product or service: HR Solution');
+  expect(supported.searchParams.get('body')).toContain('Product or service: Business applications');
   expect(supported.searchParams.get('body')).toContain('Enquiry type: Digital transformation');
-
   await page.goto('/contact/?service=Unlisted%20Product&type=Unlisted%20Type');
   await expect(page.locator('[name="interest"]')).toHaveValue('');
-  await fillContact();
+  await fill();
   await page.getByRole('button', { name: 'Prepare enquiry', exact: true }).click();
   const fallback = new URL(await page.locator('#email-brief').getAttribute('href'));
   expect(fallback.searchParams.get('body')).toContain('Product or service: Not specified');
   expect(fallback.searchParams.get('body')).toContain('Enquiry type: General enquiry');
   expect(fallback.searchParams.get('body')).not.toContain('Unlisted');
-
-  // A DOM-injected option must not bypass the draft generator's allowlist.
-  await page.locator('[name="interest"]').evaluate(select => {
-    select.add(new Option('Unlisted Product', 'Unlisted Product'));
-  });
-  await page.locator('[name="interest"]').selectOption('Unlisted Product');
-  await expect(page.locator('#form-result')).toBeHidden();
-  await page.getByRole('button', { name: 'Prepare enquiry', exact: true }).click();
-  await expect(page.locator('#interest-error')).toContainText('Choose a product or service from the list.');
-  await expect(page.locator('[name="interest"]')).toBeFocused();
-  await expect(page.locator('#form-result')).toBeHidden();
 });

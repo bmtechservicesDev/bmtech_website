@@ -1,4 +1,4 @@
-import { productFamilies, solutions, industries } from './content.js';
+import { products, solutions, industries } from './content.js';
 
 export const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 export const link = (href, label, className = 'text-link') => '<a class="' + escape(className) + '" href="' + escape(href) + '">' + escape(label) + '</a>';
@@ -9,6 +9,10 @@ const drawings = {
   education: '<path d="M3 5h6a4 4 0 014 4v12a5 5 0 00-5-3H3zM13 9a4 4 0 014-4h4v13h-4a5 5 0 00-4 3"/>',
   'embedded-systems': '<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 1v5m6-5v5M9 18v5m6-5v5M1 9h5m-5 6h5m12-6h5m-5 6h5"/><rect x="10" y="10" width="4" height="4" rx="1"/>',
   hr: '<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0112 0v3M16 5a3 3 0 010 6m2 4a5 5 0 013 4v2"/>',
+  queue: '<path d="M4 4h16v5a3 3 0 000 6v5H4v-5a3 3 0 000-6z"/><path d="M12 5v2m0 3v2m0 3v3M7 8h2m-2 8h2"/>',
+  display: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4M6 7h.01M10 7h.01M14 7h.01M18 7h.01M6 11h.01M10 11h.01M14 11h.01M18 11h.01"/>',
+  manufacturing: '<path d="M3 21V10l6 3V9l6 4V3h5v18zM6 17h2m3 0h2m3 0h2"/>',
+  retail: '<path d="M3 9l2-6h14l2 6M3 9v2a3 3 0 006 0 3 3 0 006 0 3 3 0 006 0V9M5 14v7h14v-7M10 21v-6h4v6"/>',
   code: '<path d="M7 6l-6 6 6 6m10-12l6 6-6 6M14 3l-4 18"/>',
   cloud: '<path d="M7 18a5 5 0 11.5-10A7 7 0 0121 10a4 4 0 01-1 8z"/>',
   link: '<path d="M10 14l4-4M8 16l-2 2a4 4 0 01-6-6l4-4a4 4 0 016 0m4 0l2-2a4 4 0 016 6l-4 4a4 4 0 01-6 0" transform="translate(1 -1)"/>',
@@ -24,7 +28,7 @@ const drawings = {
   mail: '<rect x="2" y="4" width="20" height="16" rx="3"/><path d="M3 6l9 7 9-7"/>',
   layers: '<path d="M12 2L2 7l10 5 10-5zM2 12l10 5 10-5M2 17l10 5 10-5"/>'
 };
-export const icon = name => '<svg class="line-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + (drawings[name] || drawings.layers) + '</svg>';
+export const icon = name => '<svg class="line-icon" data-icon="' + escape(name) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + (drawings[name] || drawings.layers) + '</svg>';
 export const eyebrow = text => '<p class="eyebrow"><span aria-hidden="true"></span>' + escape(text) + '</p>';
 export const sectionHead = (kicker, title, copy = '') => '<div class="section-head">' + eyebrow(kicker) + '<h2>' + escape(title) + '</h2>' + (copy ? '<p>' + escape(copy) + '</p>' : '') + '</div>';
 export const relatedLinks = (links, label = 'Related products and services') => '<ul class="related-links" aria-label="' + escape(label) + '">' + links.map(item => '<li>' + link(item.href, item.label) + '</li>').join('') + '</ul>';
@@ -46,13 +50,6 @@ export function brand() {
   return '<a class="brand" href="/" aria-label="AMPIGEN home"><img src="/brand/ampigen-logo.webp" width="1672" height="941" decoding="async" alt="AMPIGEN — Engineering Intelligence | Transforming Business"></a>';
 }
 
-const menuDescriptions = {
-  hospitality: 'Restaurant, guest house, hotel and lodge operations.',
-  healthcare: 'Hospital, clinic, pharmacy and specialist healthcare systems.',
-  education: 'School Management App and Parent App solutions.',
-  'embedded-systems': 'Home automation, queues, Smart LED and IoT gateways.',
-  hr: 'HR software for workforce operations across industries.'
-};
 const solutionSummaries = [
   'Connect restaurant and accommodation operations.',
   'Plan clinical, administrative and information workflows.',
@@ -62,21 +59,14 @@ const solutionSummaries = [
   'Connect applications, information and business processes.',
   'Build your digital presence and customer touchpoints.'
 ];
-const industrySummaries = {
-  hospitality: 'Restaurants, guest houses, hotels and lodges.',
-  healthcare: 'Hospitals, clinics, pharmacies and care teams.',
-  education: 'Schools, institutions and their parent communities.',
-  properties: 'Connected residential and commercial spaces.',
-  manufacturing: 'Engineering teams, equipment and connected operations.',
-  retail: 'Commerce, customer experience and digital presence.',
-  services: 'Professional services and business operations.',
-  startups: 'New software ideas and connected-product teams.'
-};
-
 export function header(path) {
+  const product = products.find(item => item.path === path);
+  const industry = industries.find(item => item.path === path);
+  const demoHref = product ? '/book-a-demo/?service=' + encodeURIComponent(product.name)
+    : industry ? '/book-a-demo/?industry=' + encodeURIComponent(industry.id) : '/book-a-demo/';
   const navigation = [
-    ['/products/', 'Products', productFamilies.map(family => [family.path, family.title, menuDescriptions[family.id], family.id]).concat([['/products/', 'Product portfolio', 'Browse every offering by family or search the catalogue.', 'layers']])],
-    ['/industries/', 'Industries', industries.map(industry => ['/industries/#' + industry.id, industry.title, industrySummaries[industry.id], industry.id === 'properties' ? 'building' : industry.id])],
+    ['/products/', 'Products', products.map(product => [product.path, product.name, product.summary, product.icon])],
+    ['/industries/', 'Industries', industries.map(industry => [industry.path, industry.title, industry.summary, industry.icon])],
     ['/solutions/', 'Solutions', solutions.map((solution, i) => ['/solutions/#' + solution.id, solution.title, solutionSummaries[i], ['hospitality', 'healthcare', 'education', 'embedded-systems', 'hr', 'link', 'spark'][i]]).concat([['/services/', 'Services', 'Explore our engineering and delivery capabilities.', 'code']])],
     ['/resources/', 'Resources', [
       ['/resources/#company-profile', 'Company profile', 'Our portfolio, capabilities and delivery approach.', 'document'],
@@ -93,8 +83,8 @@ export function header(path) {
       '<div class="nav-dropdown" id="submenu-' + i + '" hidden>' + items.map(([target, name, description, symbol], j) =>
         '<a class="mega-card" href="' + escape(target) + '" aria-label="' + escape(name) + '" aria-describedby="menu-description-' + i + '-' + j + '"><span class="mega-icon">' + icon(symbol) +
         '</span><span class="mega-copy"><strong>' + escape(name) + '</strong><span id="menu-description-' + i + '-' + j + '">' + escape(description) + '</span></span></a>').join('') +
-      '</div></div>').join('') + '<a class="button button-primary nav-cta" href="/book-a-demo/">Book a demo</a></nav></div>' +
-    '<noscript><nav class="static-nav container" aria-label="Page navigation"><a href="/products/">Products</a><a href="/industries/">Industries</a><a href="/solutions/">Solutions</a><a href="/resources/">Resources</a><a href="/book-a-demo/">Book a demo</a></nav></noscript></header>';
+      '</div></div>').join('') + '<a class="button button-primary nav-cta" href="' + escape(demoHref) + '">Book a demo</a></nav></div>' +
+    '<noscript><nav class="static-nav container" aria-label="Page navigation"><a href="/products/">Products</a><a href="/industries/">Industries</a><a href="/solutions/">Solutions</a><a href="/resources/">Resources</a><a href="' + escape(demoHref) + '">Book a demo</a></nav></noscript></header>';
 }
 
 export function footer() {
@@ -102,8 +92,8 @@ export function footer() {
     items.map(([target, label]) => '<li>' + link(target, label, 'footer-link') + '</li>').join('') + '</ul></div>';
   return '<footer class="site-footer"><div class="container"><div class="footer-intro"><div>' + brand() +
     '<p>Engineering Intelligence <span aria-hidden="true">|</span> Transforming Business</p></div><p>Industry products. Custom engineering.<br>One connected digital journey.</p></div><div class="footer-columns">' +
-    column('Products', productFamilies.map(f => [f.path, f.title]), '/products/') +
-    column('Industries', industries.filter(i => !i.isAudience).map(i => ['/industries/#' + i.id, i.title]), '/industries/') +
+    column('Products', products.map(product => [product.path, product.name]), '/products/') +
+    column('Industries', industries.map(industry => [industry.path, industry.title]), '/industries/') +
     column('Solutions', solutions.map(s => ['/solutions/#' + s.id, s.title]).concat([['/services/', 'Services']]), '/solutions/') +
     column('Resources', [['/resources/#company-profile', 'Company profile'], ['/resources/#resource-0', 'Product planning'], ['/resources/#resource-1', 'Development briefs'], ['/resources/#questions', 'Common questions']], '/resources/') +
     column('Company', [['/about/', 'About us'], ['/contact/', 'Contact us']]) +

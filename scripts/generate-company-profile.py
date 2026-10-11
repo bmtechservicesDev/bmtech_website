@@ -58,13 +58,13 @@ PALE = colors.HexColor("#F0F6FA")
 LINE = colors.HexColor("#D5E3EC")
 WHITE = colors.white
 
-EXPECTED_PRODUCT_IDS = {
-    "restaurant-solution", "guest-house", "hotel", "lodge",
-    "hospital", "clinic-automation", "pharmacy", "emr", "ehr", "pms",
-    "lis", "ris", "sis", "school-management-app", "parent-app",
-    "home-automation", "queue-management", "smart-led", "iot-gateway",
-    "hr-solution",
-}
+EXPECTED_PRODUCTS = [
+    ("clinic-automation", "Clinic Automation"),
+    ("restaurant-solution", "Restaurant Solution"),
+    ("my-school", "My School"),
+    ("queue-management", "Queue Management"),
+    ("smart-led", "Smart LED"),
+]
 
 
 class LayoutError(RuntimeError):
@@ -86,21 +86,23 @@ def load_catalogue() -> dict:
         raise RuntimeError("Node.js is required to read src/content.js")
     module_uri = (ROOT / "src/content.js").as_uri()
     source = (
-        "import { productFamilies, solutions, industries, serviceCatalogue } from "
+        "import { products, solutions, industries, serviceCatalogue } from "
         + json.dumps(module_uri)
-        + "; console.log(JSON.stringify({productFamilies, solutions, industries, serviceCatalogue}));"
+        + "; console.log(JSON.stringify({products, solutions, industries, serviceCatalogue}));"
     )
     result = subprocess.run(
         [node, "--input-type=module", "-e", source],
         cwd=ROOT, check=True, capture_output=True, text=True,
     )
     data = json.loads(result.stdout)
-    products = [product for family in data["productFamilies"] for product in family["products"]]
-    if len(products) != 20 or {product["id"] for product in products} != EXPECTED_PRODUCT_IDS:
-        raise ValueError("Review the profile layout: the expected 20-entry portfolio has changed")
-    for key, count in [("productFamilies", 5), ("solutions", 7), ("industries", 8), ("serviceCatalogue", 10)]:
+    if [(product["id"], product["name"]) for product in data["products"]] != EXPECTED_PRODUCTS:
+        raise ValueError("The profile must use the five approved products in their specified order")
+    for key, count in [("solutions", 7), ("serviceCatalogue", 10)]:
         if len(data[key]) != count:
             raise ValueError(f"Review the profile layout: expected {count} entries in {key}")
+    industry_ids = [item["id"] for item in data["industries"]]
+    if not industry_ids or len(set(industry_ids)) != len(industry_ids):
+        raise ValueError("The profile needs a non-empty industry list with unique entries")
     return data
 
 
@@ -250,7 +252,7 @@ class Profile:
         )
         top += 24
         cards = [
-            ("Industry products", "Hospitality, healthcare, education, smart systems and HR offerings for your operating context."),
+            ("Industry products", "Clinic, restaurant and school software, plus queue management and digital signage."),
             ("Engineering services", "Custom applications, AI, cloud, embedded systems, integration and digital presence services."),
             ("Implementation", "Discovery, design, development, testing, deployment, training and ongoing support."),
         ]
@@ -278,26 +280,23 @@ class Profile:
     def portfolio(self):
         top = self.page(
             "Products for your operations",
-            "Explore five product families, with development and implementation services to support your requirements.",
+            "Explore five focused products, with development and implementation services shaped around your requirements.",
         )
         inner = CONTENT_WIDTH - 30
-        for family in self.data["productFamilies"]:
-            names = " • ".join(product["name"] for product in family["products"])
-            title_height = self.measure(family["title"], inner, size=12.2, leading=16.5, bold=True)
-            desc_height = self.measure(family["description"], inner, size=9.8, leading=13.5)
-            names_height = self.measure(names, inner, size=10.0, leading=14.0, bold=True)
-            note = family.get("brandNote")
-            note_height = self.measure(note, inner, size=8.9, leading=12.3) + 6 if note else 0
-            height = 24 + title_height + 6 + desc_height + 8 + names_height + note_height
+        for product in self.data["products"]:
+            focus = " • ".join(product["tags"])
+            title_height = self.measure(product["name"], inner, size=12.2, leading=16.5, bold=True)
+            desc_height = self.measure(product["description"], inner, size=9.8, leading=13.5)
+            focus_height = self.measure(focus, inner, size=9.4, leading=13.0, bold=True) if focus else 0
+            height = 24 + title_height + 6 + desc_height + (8 + focus_height if focus else 0)
             self.box(MARGIN, top, CONTENT_WIDTH, height)
             self.pdf.setFillColor(CYAN)
             self.pdf.rect(MARGIN, PAGE_HEIGHT - top - height + 10, 2.5, height - 20, fill=1, stroke=0)
-            y = self.text(family["title"], MARGIN + 15, top + 12, inner,
+            y = self.text(product["name"], MARGIN + 15, top + 12, inner,
                           size=12.2, leading=16.5, bold=True, color=NAVY)
-            y = self.text(family["description"], MARGIN + 15, y + 6, inner, size=9.8, leading=13.5)
-            y = self.text(names, MARGIN + 15, y + 8, inner, size=10.0, leading=14.0, bold=True, color=DEEP_BLUE)
-            if note:
-                self.text(note, MARGIN + 15, y + 6, inner, size=8.9, leading=12.3, color=MUTED)
+            y = self.text(product["description"], MARGIN + 15, y + 6, inner, size=9.8, leading=13.5)
+            if focus:
+                self.text(focus, MARGIN + 15, y + 8, inner, size=9.4, leading=13.0, bold=True, color=DEEP_BLUE)
             top += height + 9
 
     def business_solutions(self):
@@ -369,14 +368,14 @@ class Profile:
         for index, item in enumerate(sectors):
             left_height = self.measure(item["title"], left_width - 22, size=10.0, leading=13.5, bold=True)
             right_height = self.measure(item["description"], right_width - 22, size=9.5, leading=13.0)
-            height = max(left_height, right_height) + 20
+            height = max(left_height, right_height) + 18
             if top + height > CONTENT_BOTTOM:
                 raise LayoutError("The industry table needs a layout review")
             self.pdf.setFillColor(PALE if index % 2 == 0 else WHITE)
             self.pdf.rect(MARGIN, PAGE_HEIGHT - top - height, CONTENT_WIDTH, height, fill=1, stroke=0)
-            self.text(item["title"], MARGIN + 11, top + 10, left_width - 22,
+            self.text(item["title"], MARGIN + 11, top + 9, left_width - 22,
                       size=10.0, leading=13.5, bold=True, color=NAVY)
-            self.text(item["description"], MARGIN + left_width + 11, top + 10, right_width - 22,
+            self.text(item["description"], MARGIN + left_width + 11, top + 9, right_width - 22,
                       size=9.5, leading=13.0)
             self.pdf.setStrokeColor(LINE)
             self.pdf.setLineWidth(0.4)
@@ -424,8 +423,8 @@ class Profile:
             ("People and workflows", "Who will use the solution, and which activities matter most?"),
             ("Existing systems", "Which applications, data and interfaces need to be considered?"),
             ("Devices and environment", "For connected systems, describe the equipment and operating conditions."),
-            ("Delivery priorities", "Share your essential scope, constraints and preferred timeline."),
-            ("Adoption and support", "Describe training, handover and ongoing support requirements."),
+            ("Scope and acceptance", "Define launch priorities, constraints and how the result will be reviewed."),
+            ("Adoption and support", "Plan training, handover, support ownership and recurring costs."),
         ]
         gap = 18
         width = (CONTENT_WIDTH - gap) / 2
@@ -465,7 +464,7 @@ def main():
     print(json.dumps({
         "output": str(args.output.resolve()),
         "pages": profile.page_number,
-        "portfolio_entries": sum(len(family["products"]) for family in data["productFamilies"]),
+        "portfolio_entries": len(data["products"]),
         "solutions": len(data["solutions"]),
         "services": len(data["serviceCatalogue"]),
         "font_source": font_source,

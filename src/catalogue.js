@@ -1,96 +1,101 @@
 export function initCatalogue() {
   if (typeof document === 'undefined') return;
-
   const controls = document.querySelector('[data-catalogue-controls]');
   const search = document.getElementById('portfolio-search');
-  const grid = document.getElementById('portfolio-family-grid');
+  const industry = document.getElementById('portfolio-industry');
+  const grid = document.getElementById('portfolio-product-grid');
   const status = document.getElementById('portfolio-status');
   const empty = document.getElementById('portfolio-empty');
-  const clear = empty?.querySelector('[data-clear-filters]');
-  if (!controls || !search || !grid || !status || !empty || !clear || controls.dataset.catalogueReady) return;
+  if (!controls || !search || !industry || !grid || !status || !empty || controls.dataset.catalogueReady) return;
 
-  const buttons = [...controls.querySelectorAll('[data-family-filter]')];
-  const families = [...grid.querySelectorAll('[data-product-family]')].map(card => ({
-    card,
-    id: card.dataset.productFamily,
-    brandNote: (card.querySelector('.product-brand-note')?.textContent || '').toLowerCase(),
-    entries: [...card.querySelectorAll('li[data-product-entry]')].map(element => ({
-      element,
-      searchText: (element.dataset.search || '').toLowerCase()
-    }))
+  const cards = [...grid.querySelectorAll('[data-product-entry]')].map(card => ({
+    card, searchText: card.dataset.search.toLowerCase(), industries: card.dataset.industries.split(' ')
   }));
-  let selectedFamily = 'all';
+  const allowedIndustries = new Set([...industry.options].map(option => option.value));
+  const copyStatus = document.getElementById('search-copy-status');
+  const copyFallback = document.querySelector('.copy-link-fallback');
+  const copyInput = document.getElementById('product-search-link');
 
-  function update() {
+  const searchUrl = () => {
+    const url = new URL(window.location.pathname, window.location.origin);
+    const query = search.value.trim().slice(0, 100);
+    if (query) url.searchParams.set('q', query);
+    if (industry.value !== 'all') url.searchParams.set('industry', industry.value);
+    return url;
+  };
+
+  function update(syncUrl = true) {
     const query = search.value.trim().toLowerCase();
-    let offeringCount = 0;
-    let familyCount = 0;
-
-    for (const family of families) {
-      const familyMatches = selectedFamily === 'all' || selectedFamily === family.id;
-      let visibleCount = 0;
-      for (const entry of family.entries) {
-        const queryMatches = !query || entry.searchText.includes(query) || family.brandNote.includes(query);
-        const visible = familyMatches && queryMatches;
-        entry.element.hidden = !visible;
-        if (visible) visibleCount += 1;
-      }
-      family.card.hidden = visibleCount === 0;
-      offeringCount += visibleCount;
-      if (visibleCount) familyCount += 1;
+    let count = 0;
+    for (const { card, searchText, industries } of cards) {
+      const matches = (!query || searchText.includes(query)) && (industry.value === 'all' || industries.includes(industry.value));
+      card.hidden = !matches;
+      if (matches) count += 1;
     }
-
-    for (const button of buttons) {
-      button.setAttribute('aria-pressed', String(button.dataset.familyFilter === selectedFamily));
+    status.textContent = `${count} ${count === 1 ? 'product' : 'products'}${industry.value === 'all' ? '' : ` for ${industry.selectedOptions[0].textContent}`}${query ? ' matching your search' : ''}`;
+    empty.hidden = count !== 0;
+    copyStatus.textContent = '';
+    copyFallback.hidden = true;
+    if (syncUrl) {
+      const url = searchUrl();
+      url.hash = window.location.hash;
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
     }
-    status.textContent = offeringCount
-      ? `${offeringCount} ${offeringCount === 1 ? 'offering' : 'offerings'} across ${familyCount} product ${familyCount === 1 ? 'family' : 'families'}`
-      : 'No offerings match these filters (0 product families).';
-    empty.hidden = offeringCount !== 0;
   }
 
   function reset() {
     search.value = '';
-    selectedFamily = 'all';
+    industry.value = 'all';
     update();
+  }
+
+  function readLocation() {
+    const params = new URLSearchParams(window.location.search);
+    search.value = (params.get('q') || '').slice(0, 100);
+    industry.value = allowedIndustries.has(params.get('industry')) ? params.get('industry') : 'all';
+    update(false);
   }
 
   function revealHashTarget() {
     let id;
+    try { id = decodeURIComponent(window.location.hash.slice(1)); } catch { return; }
+    const target = id ? document.getElementById(id) : null;
+    const card = target?.closest('[data-product-entry]');
+    if (!card?.hidden) return;
+    reset();
+    target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+  }
+
+  search.addEventListener('input', () => update());
+  industry.addEventListener('change', () => update());
+  document.querySelectorAll('[data-clear-filters]').forEach(button => button.addEventListener('click', () => { reset(); search.focus(); }));
+  controls.querySelector('[data-copy-product-search]').addEventListener('click', async () => {
+    const value = searchUrl().href;
     try {
-      id = decodeURIComponent(window.location.hash.slice(1));
+      await navigator.clipboard.writeText(value);
+      copyStatus.textContent = 'Search link copied.';
     } catch {
-      return;
+      copyFallback.hidden = false;
+      copyInput.value = value;
+      copyInput.focus();
+      copyInput.select();
+      copyStatus.textContent = 'Select and copy the search link.';
     }
-    if (!id) return;
-
-    const target = document.getElementById(id);
-    if (!target || !grid.contains(target)) return;
-    const entry = target.closest('li[data-product-entry]');
-    const family = target.closest('[data-product-family]');
-    if (!entry?.hidden && !family?.hidden) return;
-
-    reset();
-    target.scrollIntoView({
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-      block: entry ? 'center' : 'start'
-    });
-  }
-
-  search.addEventListener('input', update);
-  for (const button of buttons) {
-    button.addEventListener('click', () => {
-      selectedFamily = button.dataset.familyFilter;
-      update();
-    });
-  }
-  clear.addEventListener('click', () => {
-    reset();
-    search.focus();
   });
   window.addEventListener('hashchange', revealHashTarget);
-
-  reset();
+  window.addEventListener('popstate', () => { readLocation(); revealHashTarget(); });
+  readLocation();
   controls.dataset.catalogueReady = 'true';
   controls.hidden = false;
+  revealHashTarget();
+}
+
+export function initProductPreparation() {
+  const output = document.querySelector('[data-preparation-status]');
+  const items = [...document.querySelectorAll('[data-preparation-item]')];
+  if (!output || !items.length) return;
+  const update = () => { output.textContent = `${items.filter(item => item.checked).length} of ${items.length} points reviewed`; };
+  items.forEach(item => item.addEventListener('change', update));
+  update();
+  output.hidden = false;
 }

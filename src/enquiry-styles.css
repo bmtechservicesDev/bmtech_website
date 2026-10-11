@@ -1,0 +1,23 @@
+.enquiry-preparation {
+  margin: 4px 0 24px;
+  padding: 20px;
+  border: 1px solid #cce1ed;
+  border-radius: 14px;
+  background: #f0f8fc;
+  color: #27465c;
+}
+.enquiry-preparation h2 { margin: 0 0 10px; font-size: 17px; line-height: 1.4; letter-spacing: -.015em; }
+.enquiry-preparation p, .enquiry-preparation li { font-size: 13px; line-height: 1.65; }
+.enquiry-preparation p { margin: 0 0 10px; }
+.enquiry-preparation .preparation-industry { margin-bottom: 4px; color: #0c567e; font-weight: 750; }
+.enquiry-preparation ul { margin: 0; padding-left: 19px; }
+.enquiry-preparation li + li { margin-top: 6px; }
+.message-guidance { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-top: 7px; color: #4e687b; font-size: 12px; font-weight: 450; line-height: 1.5; }
+#message-count { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.form-result #download-brief { text-decoration: none; }
+@media (max-width: 480px) {
+  .enquiry-preparation { padding: 16px; }
+  .enquiry-preparation h2 { font-size: 16px; }
+  .message-guidance { gap: 10px; font-size: 11px; }
+  .form-result .result-actions .button { white-space: normal; text-align: center; }
+}
