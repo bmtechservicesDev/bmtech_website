@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { routes } from '../src/routes.js';
+import { routes, buildRoutes } from '../src/routes.js';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const titles = new Set();
 const descriptions = new Set();
-for (const route of routes) {
+for (const route of buildRoutes) {
   const html = await readFile(resolve(root, route.slice(1), 'index.html'), 'utf8');
   assert.equal((html.match(/<main\b/g) || []).length, 1, `${route}: one main landmark`);
   assert.equal((html.match(/<h1\b/g) || []).length, 1, `${route}: one main heading`);
@@ -25,4 +25,4 @@ for (const route of routes) {
   titles.add(title);
   descriptions.add(description);
 }
-console.log(`Verified ${routes.length} prerendered routes with distinct metadata and one H1 each.`);
+console.log(`Verified ${buildRoutes.length} prerendered routes (${routes.length} canonical pages and ${buildRoutes.length - routes.length} compatibility pages), with distinct metadata and one H1 each.`);

@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { routes } from '../src/routes.js';
+import { routes, buildRoutes } from '../src/routes.js';
 import { renderPage } from '../src/site.js';
+import { products } from '../src/products.js';
+import { industries } from '../src/industry-content.js';
+import { legacyRoutes, resolveLegacyDestination } from '../src/legacy-routes.js';
 import { contact } from '../src/pages/enquiry.js';
 import { applySeoMetadata, createRobotsTxt, createSitemap, getBreadcrumbs, renderSeoMetadata, resolveSeoConfig } from '../src/seo.js';
 
@@ -12,7 +15,7 @@ const readSchema = html => JSON.parse(html.match(/<script type="application\/ld\
 
 test('Unconfigured previews stay noindex without a fabricated canonical, image host or sitemap', () => {
   const config = resolveSeoConfig();
-  const metadata = renderSeoMetadata('/products/healthcare/', page, config);
+  const metadata = renderSeoMetadata('/products/clinic-automation/', page, config);
   assert.equal(config.indexable, false);
   assert.equal(config.siteUrl, null);
   assert.match(metadata, /name="robots" content="noindex, follow"/);
@@ -46,18 +49,18 @@ test('Invalid origins cannot leak credentials or become canonical URLs', () => {
 
 test('Configured preview metadata uses the chosen origin while sitemap and indexing remain disabled', () => {
   const config = resolveSeoConfig({ SITE_URL: 'https://www.example.com' });
-  const metadata = renderSeoMetadata('/products/hr/', page, config);
+  const metadata = renderSeoMetadata('/products/queue-management/', page, config);
   assert.match(metadata, /content="noindex, follow"/);
-  assert.match(metadata, /rel="canonical" href="https:\/\/www\.example\.com\/products\/hr\/"/);
+  assert.match(metadata, /rel="canonical" href="https:\/\/www\.example\.com\/products\/queue-management\/"/);
   assert.equal(createSitemap(config), null);
   assert.doesNotMatch(createRobotsTxt(config), /Sitemap:|Disallow:/);
 });
 
 test('Nested pages emit consistent absolute social URLs, truthful organization data and full breadcrumbs', () => {
-  const metadata = renderSeoMetadata('/products/healthcare/', page, production());
+  const metadata = renderSeoMetadata('/products/clinic-automation/', page, production());
   assert.match(metadata, /name="robots" content="index, follow"/);
   for (const attribute of ['rel="canonical" href', 'property="og:url" content']) {
-    assert.ok(metadata.includes(`${attribute}="https://www.example.com/products/healthcare/"`));
+    assert.ok(metadata.includes(`${attribute}="https://www.example.com/products/clinic-automation/"`));
   }
   assert.match(metadata, /property="og:image" content="https:\/\/www\.example\.com\/brand\/ampigen-logo\.png"/);
   assert.match(metadata, /name="twitter:image" content="https:\/\/www\.example\.com\/brand\/ampigen-logo\.png"/);
@@ -73,7 +76,7 @@ test('Nested pages emit consistent absolute social URLs, truthful organization d
   assert.deepEqual(schema['@graph'][1].itemListElement.map(({ position, name, item }) => [position, name, item]), [
     [1, 'Home', 'https://www.example.com/'],
     [2, 'Products', 'https://www.example.com/products/'],
-    [3, 'Healthcare', 'https://www.example.com/products/healthcare/']
+    [3, 'Clinic Automation', 'https://www.example.com/products/clinic-automation/']
   ]);
   assert.doesNotMatch(JSON.stringify(schema), /telephone|address|contactPoint|rating|review|FAQPage|SoftwareApplication/);
   assert.equal(readSchema(renderSeoMetadata('/', page, production()))['@graph'].length, 1);
@@ -107,7 +110,7 @@ test('Breadcrumb schema matches each rendered page and is omitted where no bread
     const markup = renderedPage.html.match(/<nav class="breadcrumbs"[^>]*>([\s\S]*?)<\/nav>/)?.[1] || '';
     const visibleLabels = [...markup.matchAll(/<(a|span)\b([^>]*)>([^<]*)<\/\1>/g)]
       .filter(([, , attrs]) => !attrs.includes('aria-hidden="true"'))
-      .map(([, , , label]) => label);
+      .map(([, , , label]) => label.replaceAll('&amp;', '&').replaceAll('&#39;', "'"));
     const graph = readSchema(renderSeoMetadata(route, renderedPage, production()))['@graph'];
     const breadcrumbs = graph.find(item => item['@type'] === 'BreadcrumbList');
     assert.deepEqual(breadcrumbs?.itemListElement.map(item => item.name) || [], visibleLabels, route);
@@ -123,7 +126,8 @@ test('Breadcrumb schema matches each rendered page and is omitted where no bread
 });
 
 test('All canonical routes have entry HTML and sitemap URLs, with no fragments or build-date lastmod', async () => {
-  assert.equal(routes.length, 14);
+  assert.equal(routes.length, 23);
+  assert.equal(buildRoutes.length, 28);
   assert.equal(new Set(routes).size, routes.length);
   const sitemap = createSitemap(production());
   assert.equal([...sitemap.matchAll(/<loc>/g)].length, routes.length);
@@ -145,7 +149,7 @@ test('Prerender metadata replaces legacy and repeated tags while preserving page
     <link href='https://outdated.invalid/' rel='canonical'>
     <script type='application/ld+json'>{"@type":"FAQPage"}</script>
     </head>`);
-  const output = applySeoMetadata(template, '/products/healthcare/', page, production());
+  const output = applySeoMetadata(template, '/products/clinic-automation/', page, production());
   for (const pattern of [/<title>/g, /name="description"/g, /name="robots"/g,
     /property="og:title"/g, /property="og:description"/g, /property="og:image"/g,
     /rel="canonical"/g, /name="twitter:card"/g, /type="application\/ld\+json"/g]) {
@@ -155,7 +159,7 @@ test('Prerender metadata replaces legacy and repeated tags while preserving page
   assert.match(output, /<link rel="stylesheet" href="\/src\/styles\.css"/);
   assert.match(output, /<script type="module" src="\/src\/main\.js"><\/script>/);
   assert.match(output, /<a class="skip-link" href="#main">Skip to content<\/a>/);
-  assert.equal(applySeoMetadata(output, '/products/healthcare/', page, production()), output);
+  assert.equal(applySeoMetadata(output, '/products/clinic-automation/', page, production()), output);
 });
 
 test('Content is safely escaped and unsupported routes cannot emit misleading home metadata', () => {
@@ -167,4 +171,49 @@ test('Content is safely escaped and unsupported routes cannot emit misleading ho
   assert.throws(() => renderSeoMetadata('/missing/', page, production()), /Unknown page route/);
   assert.throws(() => renderSeoMetadata('/', { title: '', description: 'Summary' }, production()), /title and description/);
   assert.throws(() => applySeoMetadata('<body></body>', '/', page, production()), /Missing HTML head/);
+});
+
+
+test('Five approved products keep their exact order and agree with every industry recommendation', () => {
+  const expected = [
+    ['clinic-automation', 'Clinic Automation', 'healthcare'],
+    ['restaurant-solution', 'Restaurant Solution', 'hospitality'],
+    ['my-school', 'My School', 'education'],
+    ['queue-management', 'Queue Management', 'queue'],
+    ['smart-led', 'Smart LED', 'display']
+  ];
+  assert.deepEqual(products.map(product => [product.id, product.name, product.icon]), expected);
+  assert.equal(industries.length, 9);
+  for (const industry of industries) {
+    assert.deepEqual(industry.products.map(product => product.id), products.filter(product => product.industries.includes(industry.id)).map(product => product.id), industry.id);
+    for (const recommendation of industry.products) {
+      const product = products.find(item => item.id === recommendation.id);
+      assert.equal(recommendation.title, product.name, industry.id);
+      assert.equal(recommendation.href, product.path, industry.id);
+      assert.equal(recommendation.icon, product.icon, industry.id);
+    }
+  }
+  for (const product of products) assert.ok(product.industries.every(id => industries.some(industry => industry.id === id)), product.id);
+});
+
+test('Legacy family pages are excluded from indexing and resolve recognised bookmarks safely', () => {
+  const sitemap = createSitemap(production());
+  for (const [path, legacy] of Object.entries(legacyRoutes)) {
+    const page = renderPage(path);
+    const metadata = renderSeoMetadata(path, page, production());
+    assert.match(metadata, /name="robots" content="noindex, follow"/);
+    assert.ok(metadata.includes(`rel="canonical" href="https://www.example.com${legacy.target.split('#')[0]}"`));
+    assert.ok(!sitemap.includes(`<loc>https://www.example.com${path}</loc>`));
+  }
+  assert.equal(resolveLegacyDestination('/products/hospitality/', '#restaurant-solution'), '/products/restaurant-solution/');
+  assert.equal(resolveLegacyDestination('/products/healthcare/', '#clinic-automation'), '/products/clinic-automation/');
+  assert.equal(resolveLegacyDestination('/products/education/', '#school-management-app'), '/products/my-school/');
+  assert.equal(resolveLegacyDestination('/products/embedded-systems/', '#queue-management'), '/products/queue-management/');
+  assert.equal(resolveLegacyDestination('/products/embedded-systems/', '#smart-led'), '/products/smart-led/');
+  assert.equal(resolveLegacyDestination('/products/embedded-systems/', '#home-automation'), '/industries/properties/');
+  assert.equal(resolveLegacyDestination('/products/hr/'), '/solutions/#workforce-operations');
+  assert.equal(resolveLegacyDestination('/products/education/', '#parent-app'), '/industries/education/');
+  assert.equal(resolveLegacyDestination('/products/embedded-systems/', '#__proto__'), '/industries/embedded-systems/');
+  assert.equal(resolveLegacyDestination('/products/embedded-systems/', '#%E0%A4%A'), '/industries/embedded-systems/');
+  assert.equal(resolveLegacyDestination('/unknown/', '#https://example.invalid'), null);
 });

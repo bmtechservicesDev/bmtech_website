@@ -4,14 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { loadEnv } from 'vite';
 import { renderPage } from '../src/site.js';
-import { routes } from '../src/routes.js';
+import { buildRoutes } from '../src/routes.js';
 import { applySeoMetadata, createRobotsTxt, createSitemap, resolveSeoConfig } from '../src/seo.js';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const outputRoot = resolve(projectRoot, 'dist');
 const config = resolveSeoConfig({ ...loadEnv('production', projectRoot, 'SITE_'), ...process.env });
 
-for (const route of routes) {
+for (const route of buildRoutes) {
   const file = resolve(outputRoot, route.slice(1), 'index.html');
   const page = renderPage(route);
   let html = await readFile(file, 'utf8');

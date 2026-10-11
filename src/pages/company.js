@@ -1,18 +1,9 @@
-import { productFamilies, solutions, industries, serviceCatalogue } from '../content.js';
+import { products, solutions, serviceCatalogue } from '../content.js';
 import {
   escape, icon, eyebrow, sectionHead, innerHero, relatedLinks, link, process
 } from '../components.js';
 
 // Keep existing fragment destinations while the semantic URLs remain primary.
-const industryLegacyIds = {
-  education: 'industry-0',
-  manufacturing: 'industry-2',
-  hospitality: 'industry-3',
-  healthcare: 'industry-4',
-  retail: 'industry-5',
-  startups: 'industry-6',
-  services: 'industry-7'
-};
 const solutionLegacyIds = {
   'smart-spaces-service-delivery': ['solution-0'],
   'business-digital-transformation-integration': ['solution-1'],
@@ -21,15 +12,10 @@ const solutionLegacyIds = {
 const solutionIcons = [
   'hospitality', 'healthcare', 'education', 'embedded-systems', 'hr', 'link', 'spark'
 ];
-const industryIcons = {
-  hospitality: 'hospitality', healthcare: 'healthcare', education: 'education',
-  properties: 'building', manufacturing: 'embedded-systems', retail: 'spark',
-  services: 'users', startups: 'rocket'
-};
-
 const number = index => String(index + 1).padStart(2, '0');
 const optionalId = id => id ? ` id="${escape(id)}"` : '';
 const tags = items => `<ul class="tag-list">${items.map(item => `<li>${escape(item)}</li>`).join('')}</ul>`;
+const productNames = `${products.slice(0, -1).map(product => product.name).join(', ')} and ${products.at(-1).name}`;
 
 function solutionCard(solution) {
   const index = solutions.indexOf(solution);
@@ -43,25 +29,17 @@ function solutionCard(solution) {
   </article>`;
 }
 
-function sectorCard(industry) {
-  return `<article class="sector-card industry-card" id="${escape(industry.id)}">
-    <div class="icon-badge">${icon(industryIcons[industry.id])}</div>
-    <h3${optionalId(industryLegacyIds[industry.id])}>${escape(industry.title)}</h3>
-    <p>${escape(industry.description)}</p>
-    ${relatedLinks(industry.relatedLinks, `Relevant offerings for ${industry.title}`)}
-  </article>`;
-}
-
 const planningResources = [
   {
     id: 'resource-0',
     icon: 'compass',
-    title: 'Evaluate industry software',
-    description: 'Give a product discussion a clear operational focus.',
+    title: 'Evaluate a product',
+    description: 'Use your everyday workflow to assess product fit.',
     questions: [
-      'Which product family and operating setting are relevant to your organization?',
-      'Who will use the software, and which workflows should a demonstration cover?',
-      'Which existing systems, data and rollout requirements need to be considered?'
+      'Which product matches the work you want to improve?',
+      'Which users and end-to-end tasks should a demonstration cover?',
+      'Which functions must be available at launch, and which can follow later?',
+      'What information, devices or existing systems will the product need to work with?'
     ]
   },
   {
@@ -70,9 +48,10 @@ const planningResources = [
     title: 'Prepare a development brief',
     description: 'Explain the problem before defining the application.',
     questions: [
-      'What business problem should the application solve?',
-      'Who are its users, and what are their essential tasks?',
-      'Which integrations, timeline and operating constraints affect the project?'
+      'What problem should the application solve, and how will you assess the outcome?',
+      'Who are its users, and which tasks and exceptions must it support?',
+      'Which applications, data sources and integrations are involved?',
+      'What are your launch priorities, budget range and timeline constraints?'
     ]
   },
   {
@@ -81,9 +60,49 @@ const planningResources = [
     title: 'Plan connected systems',
     description: 'Bring the devices, information and operating environment into the brief.',
     questions: [
-      'Which devices, information or recurring activities are involved?',
-      'What data, interfaces and system access are available?',
-      'Where are human review, exception handling and evaluation required?'
+      'Which devices, displays and locations are part of the installation?',
+      'What power, connectivity, interfaces and system access are available?',
+      'How should staff handle connectivity loss, exceptions or manual overrides?',
+      'Who will own installation, content, maintenance and ongoing support?'
+    ]
+  }
+];
+
+const implementationChecks = [
+  {
+    icon: 'compass',
+    title: 'Scope and acceptance',
+    questions: [
+      'Write down the essential workflows and the result expected from each.',
+      'Confirm the included configuration, custom work and integration scope.',
+      'Agree who will review the solution and approve it for launch.'
+    ]
+  },
+  {
+    icon: 'users',
+    title: 'Data and access',
+    questions: [
+      'Identify records to migrate and who will check their quality.',
+      'Define the access each role needs for its everyday work.',
+      'Confirm the data handling, export and recovery requirements to assess.'
+    ]
+  },
+  {
+    icon: 'link',
+    title: 'Systems and dependencies',
+    questions: [
+      'List required applications, devices, interfaces and responsible owners.',
+      'Check connectivity, hosting and installation dependencies.',
+      'Include normal workflows and failure scenarios in acceptance testing.'
+    ]
+  },
+  {
+    icon: 'check',
+    title: 'Rollout and support',
+    questions: [
+      'Decide whether to start with one team or location before wider rollout.',
+      'Plan training, handover and the transition from existing processes.',
+      'Agree support ownership, recurring costs and how changes will be assessed.'
     ]
   }
 ];
@@ -110,11 +129,6 @@ const deliveryPrinciples = [
     description: 'Include testing, deployment, user training, handover and ongoing support in the delivery conversation.'
   }
 ];
-
-const coreIndustries = industries.filter(industry => ['hospitality', 'healthcare', 'education'].includes(industry.id));
-const operatingIndustries = industries.filter(industry => !industry.isAudience && !coreIndustries.includes(industry));
-const startupAudience = industries.find(industry => industry.isAudience);
-const crossIndustryFamilies = productFamilies.filter(family => ['embedded-systems', 'hr'].includes(family.id));
 
 export const companyPages = {
   '/solutions/': {
@@ -148,50 +162,6 @@ export const companyPages = {
     </section>`
   },
 
-  '/industries/': {
-    title: 'Industry Digital Solutions | AMPIGEN',
-    description: 'Explore software and digital solutions for hospitality, healthcare, education, property, manufacturing, retail and service organizations.',
-    html: `${innerHero(
-      'Industries',
-      'Digital Solutions Shaped Around Your Industry',
-      'The operating context matters. Start with your users, everyday activities and business constraints, then identify the software products, smart systems and engineering services that fit.'
-    )}
-    <section class="section">
-      <div class="container">
-        ${sectionHead('Industry focus', 'Understand the setting. Shape the solution.', 'Explore dedicated software portfolios and the supporting services around your organization.')}
-        <div class="sector-grid">${coreIndustries.map(sectorCard).join('')}</div>
-      </div>
-    </section>
-    <section class="section section-soft">
-      <div class="container">
-        ${sectionHead('Operating environments', 'Connect physical operations and digital work', 'Plan around your facilities, equipment, customer journey and the systems your teams use.')}
-        <div class="card-grid">${operatingIndustries.map(sectorCard).join('')}</div>
-      </div>
-    </section>
-    <section class="section">
-      <div class="container split-layout">
-        <div>${eyebrow('Across industries')}<h2>Workforce and connected systems</h2><p class="lead-copy">Explore these product families alongside your industry requirements.</p></div>
-        <div class="prose-grid">${crossIndustryFamilies.map(family => `<article id="${escape(family.id)}">
-          <div class="icon-badge">${icon(family.id)}</div>
-          <h3${family.id === 'embedded-systems' ? ' id="industry-1"' : ''}>${escape(family.title)}</h3>
-          <p>${escape(family.description)}</p>
-          ${link(family.path, `Explore ${family.navLabel}`)}
-        </article>`).join('')}</div>
-      </div>
-    </section>
-    <section class="section section-dark">
-      <div class="container split-layout">
-        <div>${eyebrow('Product teams')}<h2>From a product idea to a development plan</h2><p class="lead-copy">Bring a new software or connected-product requirement into focus.</p></div>
-        <article id="${escape(startupAudience.id)}">
-          <div class="icon-badge">${icon('rocket')}</div>
-          <h3 id="industry-6">${escape(startupAudience.title)}</h3>
-          <p>${escape(startupAudience.description)}</p>
-          ${relatedLinks(startupAudience.relatedLinks, 'Capabilities for startups and product teams')}
-        </article>
-      </div>
-    </section>`
-  },
-
   '/services/': {
     title: 'Software, AI & IoT Services | AMPIGEN',
     description: 'Explore custom software, AI, cloud, IoT, embedded engineering, integration, websites, digital marketing and technical training from AMPIGEN.',
@@ -219,11 +189,11 @@ export const companyPages = {
 
   '/resources/': {
     title: 'Software Buying & Project Resources | AMPIGEN',
-    description: 'Explore the AMPIGEN company profile and practical questions for planning industry software, connected systems and digital projects.',
+    description: 'Download the AMPIGEN company profile and use practical checklists to evaluate products, plan custom development and prepare implementation.',
     html: `${innerHero(
       'Resources',
       'A Clearer Start to Your Digital Project',
-      'Explore our company profile and prepare the questions that make a product or project discussion useful. Start with your organization, the people who will use the solution and the workflows that matter most.'
+      'Compare products around your everyday work, prepare a clear development brief and plan what implementation will involve. Use these questions with your team before your next discussion.'
     )}
     <section class="section" id="company-profile">
       <div class="container profile-resource">
@@ -237,7 +207,7 @@ export const companyPages = {
         <div>
           ${eyebrow('Company profile · PDF')}
           <h2>Our portfolio. Your starting point.</h2>
-          <p class="lead-copy">Explore our industry software, smart and embedded systems, technical services and implementation approach in one company profile.</p>
+          <p class="lead-copy">Explore ${escape(productNames)}, along with our engineering services and implementation approach.</p>
           <p>Share it with your team to prepare a product evaluation, a custom development brief or a discussion about connecting existing systems.</p>
           ${link('/documents/ampigen-company-profile.pdf', 'Download company profile')}
         </div>
@@ -254,14 +224,26 @@ export const companyPages = {
         </article>`).join('')}</div>
       </div>
     </section>
+    <section class="section" id="implementation-checklist">
+      <div class="container">
+        ${sectionHead('Implementation checklist', 'Look beyond the feature list', 'Use these criteria to compare scope and prepare the people, data and systems involved in rollout.')}
+        <div class="card-grid">${implementationChecks.map(check => `<article class="resource-card">
+          <div class="icon-badge">${icon(check.icon)}</div>
+          <h3>${escape(check.title)}</h3>
+          <ul class="checklist">${check.questions.map(question => `<li>${escape(question)}</li>`).join('')}</ul>
+        </article>`).join('')}</div>
+      </div>
+    </section>
     <section class="section" id="questions">
       <div class="container split-layout">
         <div>${eyebrow('Common questions')}<h2>Before we begin</h2><p class="lead-copy">Understand how a product or development requirement becomes an implementation discussion.</p></div>
         <div class="faq-list">
-          <details><summary>Can we combine a product with custom development?</summary><p>Yes. We assess the product against your requirements, then define any configuration, development or integration work needed for the agreed scope.</p></details>
+          <details><summary>Which products can we evaluate?</summary><p>Our product portfolio includes ${escape(productNames)}. Each product page describes its focus and the workflows to discuss.</p>${relatedLinks(products.map(product => ({ href: product.path, label: product.name })), 'Explore the five AMPIGEN products')}</details>
+          <details><summary>Can we combine a product with custom development?</summary><p>Yes. We assess the product against your requirements, then define any configuration, development or integration work needed for the agreed scope. Review the functions you need during the product discussion before agreeing the implementation.</p></details>
           <details><summary>Can you work with existing systems?</summary><p>Integration and modernization are part of our capabilities. We review the architecture, interfaces, data and access constraints before confirming the approach.</p></details>
-          <details><summary>What should we prepare for a product discussion?</summary><p>Describe your organization, the people who will use the product and the workflows you want to review. Include relevant existing systems, implementation needs and operating constraints.</p></details>
-          <details><summary>How do enquiries reach your team?</summary><p>The form prepares a draft. Review it and send it from your email app or WhatsApp.</p></details>
+          <details><summary>What should we prepare for a product discussion?</summary><p>Choose a typical task and an exception your team handles today. Describe who performs each step, what information is needed and the result you expect. Include existing systems, rollout needs and the questions you want a demonstration to answer.</p></details>
+          <details><summary>What should an implementation plan include?</summary><p>Agree the scope, responsibilities, data preparation, access requirements, integrations and acceptance criteria. Include training, rollout, support and any recurring costs so your team can evaluate the complete engagement.</p></details>
+          <details><summary>How do enquiries reach your team?</summary><p>The form prepares a draft for you to review and send from your email app or WhatsApp. Preparing the draft does not send your enquiry or reserve a demonstration time.</p></details>
         </div>
       </div>
     </section>`
@@ -279,7 +261,8 @@ export const companyPages = {
       <div class="container split-layout editorial-intro">
         <div>${eyebrow('Our business')}<h2>Industry understanding.<br>Engineering delivery.</h2><p class="lead-copy">Engineering Intelligence | Transforming Business</p></div>
         <div class="lead-copy">
-          <p>Our portfolio covers hospitality, healthcare, education, HR and embedded systems, supported by software development, AI, cloud, IoT and automation services.</p>
+          <p>Our products are ${escape(productNames)}. They provide a starting point for clinic, restaurant and school workflows, in-person service and information display.</p>
+          <p>Our wider capabilities cover custom software, websites, web and mobile applications, desktop applications, AI, cloud, IoT, embedded engineering and system integration. Workforce operations, accommodation workflows and other business requirements can be scoped as custom solutions.</p>
           <p>An engagement can start with an industry product, a new application idea or an existing workflow that needs improvement. We work from the business requirement through design, development, integration, testing, deployment, training and support.</p>
           <p>The starting point is the people who will use the solution, the work they need to complete and the environment the technology must operate in.</p>
         </div>

@@ -1,4 +1,7 @@
-import { routes } from './routes.js';
+import { routes, buildRoutes } from './routes.js';
+import { products } from './products.js';
+import { industries } from './industry-content.js';
+import { legacyRoutes } from './legacy-routes.js';
 
 const breadcrumbNames = {
   '/': 'Home',
@@ -10,11 +13,9 @@ const breadcrumbNames = {
   '/industries/': 'Industries',
   '/resources/': 'Resources',
   '/book-a-demo/': 'Book a demo',
-  '/products/hospitality/': 'Hospitality',
-  '/products/healthcare/': 'Healthcare',
-  '/products/education/': 'Education',
-  '/products/embedded-systems/': 'Embedded Systems',
-  '/products/hr/': 'HR'
+  ...Object.fromEntries(products.map(product => [product.path, product.name])),
+  ...Object.fromEntries(industries.map(industry => [industry.path, industry.title])),
+  ...Object.fromEntries(Object.entries(legacyRoutes).map(([path, entry]) => [path, entry.label]))
 };
 
 export const escapeHtml = value => String(value)
@@ -25,7 +26,7 @@ export const escapeHtml = value => String(value)
   .replaceAll("'", '&#39;');
 
 function assertRoute(route) {
-  if (!routes.includes(route)) throw new Error(`Unknown page route: ${route}`);
+  if (!buildRoutes.includes(route)) throw new Error(`Unknown page route: ${route}`);
 }
 
 export function resolveSeoConfig(env = {}) {
@@ -88,7 +89,7 @@ export function renderSeoMetadata(route, page, config) {
   const tags = [
     `<title>${escapeHtml(page.title)}</title>`,
     `<meta name="description" content="${escapeHtml(page.description)}" />`,
-    `<meta name="robots" content="${config.indexable ? 'index, follow' : 'noindex, follow'}" />`,
+    `<meta name="robots" content="${config.indexable && !page.noindex ? 'index, follow' : 'noindex, follow'}" />`,
     '<meta property="og:type" content="website" />',
     '<meta property="og:site_name" content="AMPIGEN" />',
     `<meta property="og:title" content="${escapeHtml(page.title)}" />`,
@@ -99,7 +100,7 @@ export function renderSeoMetadata(route, page, config) {
   ];
 
   if (config.siteUrl) {
-    const canonical = new URL(route, config.siteUrl).href;
+    const canonical = new URL(page.canonicalPath || route, config.siteUrl).href;
     const image = new URL('/brand/ampigen-logo.png', config.siteUrl).href;
     tags.push(
       `<link rel="canonical" href="${escapeHtml(canonical)}" />`,

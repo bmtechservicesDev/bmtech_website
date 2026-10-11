@@ -1,148 +1,84 @@
-import { productFamilies } from '../content.js';
+import { products } from '../products.js';
+import { industries } from '../industry-content.js';
 import { escape, icon, eyebrow, sectionHead, innerHero, relatedLinks, link } from '../components.js';
 
-const familyLabels = {
-  hospitality: 'Hospitality',
-  healthcare: 'Healthcare',
-  education: 'Education',
-  'embedded-systems': 'Embedded Systems',
-  hr: 'HR'
-};
-
 const legacyProductIds = {
-  'restaurant-solution': 'product-0',
   'clinic-automation': 'product-1',
-  'school-management-app': 'product-2',
-  'iot-gateway': 'product-3',
-  'smart-led': 'product-4',
-  'queue-management': 'product-5'
+  'restaurant-solution': 'product-0',
+  'my-school': 'product-2',
+  'queue-management': 'product-5',
+  'smart-led': 'product-4'
 };
 
-const offeringCount = productFamilies.reduce((total, family) => total + family.products.length, 0);
-const offeringLabel = count => `${count} ${count === 1 ? 'offering' : 'offerings'}`;
+function productCard(product) {
+  const searchText = [product.name, product.domain, product.summary, product.description, ...product.tags].join(' ');
+  return `<article class="card catalogue-card" id="${escape(product.id)}" data-product-entry="${escape(product.id)}" data-industries="${escape(product.industries.join(' '))}" data-search="${escape(searchText)}">
+    <a class="catalogue-product-link" href="${escape(product.path)}" aria-label="${escape(product.name)}">
+      <span class="legacy-anchor" id="${legacyProductIds[product.id]}" aria-hidden="true"></span>
+      <div class="product-card-heading"><span class="icon-badge">${icon(product.icon)}</span><span class="product-domain">${escape(product.domain)}</span></div>
+      <h3>${escape(product.name)}</h3><p>${escape(product.description)}</p>
+      <ul class="tag-list" aria-label="${escape(product.name)} workflow areas">${product.tags.map(tag => `<li>${escape(tag)}</li>`).join('')}</ul>
+      <span class="catalogue-card-tail">View product details ${icon('arrow')}</span>
+    </a>
+  </article>`;
+}
 
-function catalogueControls() {
-  return `<div class="portfolio-toolbar" data-catalogue-controls hidden>
-    <div class="search-field">
-      <label for="portfolio-search">Search products</label>
-      <input id="portfolio-search" type="search" name="product-search" placeholder="Search by product or requirement" aria-controls="portfolio-family-grid" autocomplete="off">
+function discoveryControls() {
+  return `<div class="product-discovery" data-catalogue-controls hidden>
+    <div class="discovery-fields">
+      <div class="search-field"><label for="portfolio-search">Search products or workflows</label><input id="portfolio-search" type="search" maxlength="100" placeholder="Try appointments, school or displays" aria-controls="portfolio-product-grid" autocomplete="off"></div>
+      <div class="search-field"><label for="portfolio-industry">Your industry</label><select id="portfolio-industry" aria-controls="portfolio-product-grid"><option value="all">All industries</option>${industries.map(industry => `<option value="${escape(industry.id)}">${escape(industry.title)}</option>`).join('')}</select></div>
     </div>
-    <div class="filter-chips" role="group" aria-label="Filter by product family">
-      <button class="filter-chip" type="button" data-family-filter="all" aria-pressed="true" aria-controls="portfolio-family-grid">All families</button>
-      ${productFamilies.map(family => `<button class="filter-chip" type="button" data-family-filter="${escape(family.id)}" aria-pressed="false" aria-controls="portfolio-family-grid">${escape(familyLabels[family.id])}</button>`).join('')}
-    </div>
+    <div class="discovery-status"><p id="portfolio-status" role="status" aria-live="polite" aria-atomic="true">5 products</p><button type="button" class="text-action" data-clear-filters>Clear filters</button><button type="button" class="text-action" data-copy-product-search>Copy search link</button><span id="search-copy-status" role="status" aria-live="polite"></span></div>
+    <div class="copy-link-fallback" hidden><label for="product-search-link">Search link</label><input id="product-search-link" type="url" readonly></div>
   </div>`;
 }
 
-function catalogueEntry(family, product) {
-  const searchText = [family.title, family.navLabel, product.name, product.description, ...product.tags].join(' ');
-  const legacyId = legacyProductIds[product.id];
-  return `<li data-product-entry="${escape(product.id)}" data-search="${escape(searchText)}">
-    <a class="product-name-link"${legacyId ? ` id="${escape(legacyId)}"` : ''} href="${escape(`${family.path}#${product.id}`)}"><span>${escape(product.name)}</span><span aria-hidden="true">${icon('arrow')}</span></a>
-  </li>`;
+function workflowPanel(product) {
+  return `<aside class="product-workflow" aria-label="${escape(product.name)} workflow focus"><span class="icon-badge">${icon(product.icon)}</span><p class="small-label">WORKFLOW FOCUS</p><ol>${product.workflow.map(item => `<li>${escape(item.title)}</li>`).join('')}</ol><p class="workflow-caption">A starting point for your product discussion.</p></aside>`;
 }
 
-function familyCard(family) {
-  return `<article class="card family-card" id="${escape(family.id)}" data-product-family="${escape(family.id)}">
-    <div class="product-content">
-      <div class="icon-badge" aria-hidden="true">${icon(family.id)}</div>
-      <p class="small-label">${offeringLabel(family.products.length)}</p>
-      <h3>${link(family.path, family.title)}</h3>
-      <p>${escape(family.description)}</p>
-      <ul class="portfolio-links">${family.products.map(product => catalogueEntry(family, product)).join('')}</ul>
-      ${family.brandNote ? `<p class="product-brand-note">${escape(family.brandNote)}</p>` : ''}
-    </div>
-  </article>`;
-}
-
-function supportingServices() {
-  const services = [
-    {
-      id: 'product-6',
-      icon: 'code',
-      title: 'Website Development & Hosting',
-      href: '/services/#service-01',
-      description: 'Business websites, hosting, maintenance and enquiry integrations for your digital presence.'
-    },
-    {
-      id: 'product-7',
-      icon: 'education',
-      title: 'Domain Training & Education',
-      href: '/services/#service-09',
-      description: 'Practical training and applied projects in software, embedded systems, IoT, AI and automation.'
-    },
-    {
-      icon: 'link',
-      title: 'Custom Development & Integration',
-      href: '/services/',
-      description: 'Web, mobile and desktop software, cloud applications, embedded engineering and system integration.'
-    }
-  ];
-
-  return `<section class="section section-soft"><div class="container">
-    ${sectionHead('SUPPORTING SERVICES', 'Build, connect and support your solution', 'Custom development, integration and specialist services support your products and wider digital requirements.')}
-    <div class="supporting-grid">${services.map(service => `<article class="card"${service.id ? ` id="${service.id}"` : ''}>
-      <div class="icon-badge" aria-hidden="true">${icon(service.icon)}</div>
-      <h3>${link(service.href, service.title)}</h3>
-      <p>${escape(service.description)}</p>
-    </article>`).join('')}</div>
-  </div></section>`;
-}
-
-function familyJumpNav(family) {
-  return `<nav class="product-jump-nav" aria-label="Products in ${escape(familyLabels[family.id])}">
-    ${eyebrow('IN THIS FAMILY')}
-    <ul>${family.products.map(product => `<li>${link(`#${product.id}`, product.name)}</li>`).join('')}</ul>
-  </nav>`;
-}
-
-function productCard(product, index) {
-  return `<article class="card product-card" id="${escape(product.id)}" data-product="${escape(product.id)}">
-    <div class="product-content">
-      <header><span class="product-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span><h3>${escape(product.name)}</h3></header>
-      <p>${escape(product.description)}</p>
-      ${product.tags.length ? `<ul class="product-features tag-list" aria-label="${escape(`${product.name} features`)}">${product.tags.map(tag => `<li>${escape(tag)}</li>`).join('')}</ul>` : ''}
-    </div>
-  </article>`;
-}
-
-function familyPage(family) {
+function productPage(product) {
   return {
-    title: family.seoTitle,
-    description: family.metaDescription,
-    html: `${innerHero(familyLabels[family.id], family.h1, family.intro, { href: '/products/', label: 'Products' }, familyJumpNav(family))}
-      <section class="section"><div class="container">
-        ${sectionHead('PRODUCT PORTFOLIO', family.title, 'Choose the offering that fits your organization and the workflows you want to support.')}
-        <div class="product-grid product-detail-grid">${family.products.map(productCard).join('')}</div>
-        ${family.brandNote ? `<p class="family-brand-note">${escape(family.brandNote)}</p>` : ''}
+    title: product.seoTitle,
+    description: product.metaDescription,
+    html: `${innerHero(product.name, product.h1, product.intro, { href: '/products/', label: 'Products' }, workflowPanel(product))}
+      <nav class="product-section-nav" aria-label="On this product page"><div class="container">${link('#workflow', 'Workflow areas')}${link('#implementation', 'Implementation checklist')}${link('#questions', 'Product questions')}${link('#related', 'Related expertise')}</div></nav>
+      <section class="section" id="workflow"><div class="container">
+        ${sectionHead('PRODUCT OVERVIEW', 'Bring the whole workflow into view', product.audience)}
+        <div class="card-grid-three">${product.workflow.map(item => `<article class="card workflow-card"><span class="workflow-dot" aria-hidden="true"></span><h3>${escape(item.title)}</h3><p>${escape(item.description)}</p></article>`).join('')}</div>
       </div></section>
-      <section class="section section-soft"><div class="container family-context-grid">
-        ${family.sections.map(section => `<article><h2>${escape(section.title)}</h2><p>${escape(section.body)}</p></article>`).join('')}
+      <section class="section section-soft" id="implementation"><div class="container product-implementation">
+        <div>${eyebrow('PREPARE FOR IMPLEMENTATION')}<h2>A more useful discussion starts here.</h2><p>Use this checklist to bring your team’s priorities into a focused product discussion.</p><p>Review the product fit, system dependencies and delivery scope with the people who will use the solution.</p></div>
+        <div class="implementation-checklist"><h3>${escape(product.name)} checklist</h3><ul>${product.requirements.map((item, index) => `<li><label for="requirement-${index}"><input id="requirement-${index}" type="checkbox" data-preparation-item><span>${escape(item)}</span></label></li>`).join('')}</ul><p class="checklist-status" role="status" aria-live="polite" data-preparation-status hidden>0 of ${product.requirements.length} points reviewed</p></div>
       </div></section>
-      <section class="section related-section"><div class="container">
-        <h2>Related solutions and services</h2>
-        ${relatedLinks(family.relatedLinks, `Related solutions and services for ${familyLabels[family.id]}`)}
-      </div></section>`
+      <section class="section" id="questions"><div class="container product-questions">${sectionHead('PRODUCT QUESTIONS', 'What to consider before your demonstration')}
+        <div class="faq-list">${product.faqs.map(faq => `<details><summary>${escape(faq.question)}</summary><p>${escape(faq.answer)}</p></details>`).join('')}</div>
+      </div></section>
+      <section class="section section-soft" id="related"><div class="container"><h2>Connect the wider requirement</h2>${relatedLinks(product.relatedLinks, `Related expertise for ${product.name}`)}${link('/products/', 'All AMPIGEN products')}</div></section>`
   };
 }
 
 export const portfolioPages = {
   '/products/': {
     title: 'Software Products & Smart Systems | AMPIGEN',
-    description: 'Explore AMPIGEN software for hospitality, healthcare, education and HR, plus home automation, queue management, Smart LED and connected systems.',
-    html: `${innerHero('Products', 'Industry Software Products & Smart Systems', 'Explore the AMPIGEN portfolio by the industry or business function you want to support. Our offerings span hospitality, healthcare, education, HR and smart embedded systems, with development and implementation services to support your requirements.')}
-      <section class="section"><div class="container">
-        ${sectionHead('PRODUCT FAMILIES', 'Find the right starting point', 'Each family brings together related offerings and links to their product and implementation scope.')}
-        ${catalogueControls()}
-        <div class="portfolio-summary"><p id="portfolio-status" role="status" aria-live="polite" aria-atomic="true">${offeringLabel(offeringCount)} across ${productFamilies.length} product families</p></div>
-        <div class="product-grid family-grid" id="portfolio-family-grid">${productFamilies.map(familyCard).join('')}</div>
-        <div class="portfolio-empty" id="portfolio-empty" hidden>
-          <h3>No matching products</h3>
-          <p>Try another product name or requirement, or clear the filters to see the full portfolio.</p>
-          <button class="filter-chip" type="button" data-clear-filters>Clear filters</button>
-        </div>
+    description: 'Explore Clinic Automation, Restaurant Solution, My School, Queue Management and Smart LED from AMPIGEN. Find a product for your industry and workflow.',
+    html: `${innerHero('Products', 'Practical Products. Connected Digital Solutions.', 'Explore five focused products for clinical work, restaurant operations, school administration, service queues and digital displays. Connect the right starting point with the engineering and implementation your organization needs.')}
+      <section class="section" id="find-your-product"><div class="container">
+        ${sectionHead('OUR PRODUCTS', 'Find your starting point', 'Search a workflow or choose your industry to see relevant products. Each product page explains the workflow focus and helps you prepare for implementation.')}
+        ${discoveryControls()}
+        <div class="catalogue-grid" id="portfolio-product-grid">${products.map(productCard).join('')}</div>
+        <div class="portfolio-empty" id="portfolio-empty" hidden><span class="icon-badge">${icon('search')}</span><h3>No products match this selection.</h3><p>Try another search, or explore custom development and integration for your requirements.</p><button type="button" class="button button-outline" data-clear-filters>Show all products</button>${relatedLinks([{ href: '/services/', label: 'Explore engineering services' }, { href: '/industries/', label: 'Explore your industry' }])}</div>
       </div></section>
-      ${supportingServices()}`
+      <section class="section section-soft"><div class="container product-service-intro">
+        <div>${eyebrow('EXTEND THE SOLUTION')}<h2>Products backed by end-to-end engineering.</h2><p>Bring websites, custom applications, cloud services, AI, embedded systems and integration into the same delivery plan. Explore these capabilities in Services.</p></div>
+        <ul class="related-links" aria-label="Supporting engineering services">
+          <li id="product-6">${link('/services/#service-01', 'Website Development & Hosting')}</li>
+          <li id="product-7">${link('/services/#service-09', 'Domain Training & Education')}</li>
+          <li id="product-3">${link('/services/#service-03', 'Embedded Systems & IoT Development')}</li>
+          <li>${link('/services/', 'All engineering services')}</li>
+        </ul>
+      </div></section>`
   },
-  ...Object.fromEntries(productFamilies.map(family => [family.path, familyPage(family)]))
+  ...Object.fromEntries(products.map(product => [product.path, productPage(product)]))
 };
