@@ -121,17 +121,34 @@ The generator writes `public/documents/ampigen-company-profile.pdf` and enforces
 
 ## Hosting and release
 
-The existing Firebase Hosting target remains `bmtech-website` (project number `74431502417`). This is an infrastructure identifier, not the public brand name. The GitHub repository remains `bmtechservicesDev/bmtech_website`; neither service is renamed by the brand refresh. Firebase hosts static files only. Route directories and trailing slashes are preserved, there is no SPA catch-all rewrite, and hashed assets have immutable caching. The predeploy hook builds fresh output. Do not run `firebase init hosting` over the existing configuration.
+The Firebase project remains `bmtech-website` (project number `74431502417`) and the GitHub repository remains `bmtechservicesDev/bmtech_website`. The requested production address is `https://ampigen.web.app`, served by an additional Hosting site with ID `ampigen` in this existing project. Firebase hosts static files only. Route directories and trailing slashes are preserved, there is no SPA catch-all rewrite, and hashed assets have immutable caching. The predeploy hook builds fresh output. Do not run `firebase init hosting` over the existing configuration.
+
+`firebase.json` retains the original default Hosting site and review-channel configuration. `firebase.ampigen.json` selects only the `ampigen` target, whose site mapping is checked into `.firebaserc`. The production configuration retains the same routes, cache headers and company-profile redirect.
 
 Deployment is a separate requested action. For a later authorised review-channel update from a configured Firebase CLI session:
 
 ```bash
 npm ci
-SITE_INDEXABLE=false firebase hosting:channel:deploy review --expires 7d --project bmtech-website
+SITE_URL="" SITE_INDEXABLE=false firebase hosting:channel:deploy review --expires 7d --project bmtech-website
 ```
 
 That command returns the actual temporary review URL. Review all 14 routes and the email/WhatsApp draft actions.
 
-Before a later authorised production release, verify the production origin and set **both** `SITE_URL` to that HTTPS origin and `SITE_INDEXABLE=true` in the build environment. Then use the existing `firebase deploy --only hosting --project bmtech-website` command. Running that command with default settings publishes a **noindex** build. Confirm the final HTML, canonical URLs, robots file, sitemap and response headers on the returned production URL.
+### AMPIGEN production deployment
+
+An authenticated Firebase CLI account must have access to the existing project. Check the project number and list its Hosting sites before deployment. If `ampigen` is already listed, reuse it. Otherwise create it once with `firebase hosting:sites:create ampigen --project bmtech-website`. Site IDs are globally unique; a public "Site Not Found" page does not prove availability. Stop if Firebase reports that the name is unavailable or access is denied. This repository configuration does not create or reserve the site.
+
+Deploy the verified source revision using the separate production configuration:
+
+```bash
+npm ci
+SITE_URL=https://ampigen.web.app SITE_INDEXABLE=true \
+  firebase deploy --only hosting:ampigen \
+  --config firebase.ampigen.json --project bmtech-website
+```
+
+Both environment values must be set on the **deploy command**, because its predeploy hook rebuilds the site. The production guard rejects missing or mismatched values before the build. Production HTML, canonical URLs, social URLs, structured data and the 14-route sitemap use `https://ampigen.web.app`. Confirm `/build-info.json` matches the reviewed source commit with `sourceState: "clean"`; then verify all routes, the AMPIGEN assets, the old-PDF 301 redirect, and that HTML and response headers permit indexing. Keep the original review channel `noindex`.
+
+The `firebase.ampigen.json` file must be selected explicitly. Using the original `firebase.json` deploys to the original Hosting site. Site creation and production deployment still require an authenticated, authorised execution; checked-in configuration and green CI do not establish that the website has been deployed.
 
 No Firebase credentials or service-account keys belong in the repository. The frontend rebuild does not introduce Sites, Hercules, a new hosting project, backend or database. `/build-info.json` records the source commit, whether tracked files were modified at build time, and the UTC build timestamp; compare it with the reviewed commit when validating a deployed build.
